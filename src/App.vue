@@ -1,31 +1,54 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view />
+    <v-app id="inspire">
+      <v-content>
+        <v-container fluid fill-height>
+          <v-layout align-center justify-center>
+            <div id="nav">
+              <router-link
+                v-if="authenticated"
+                to="/login"
+                v-on:click.native="logout()"
+                replace
+                >Logout</router-link
+              >
+            </div>
+            <router-view @authenticated="setUser" />
+          </v-layout>
+        </v-container>
+      </v-content>
+    </v-app>
   </div>
 </template>
 
-<style>
-#app {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-#nav {
-  padding: 30px;
-}
-
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-  color: #42b983;
-}
-</style>
+<script>
+export default {
+  name: "App",
+  data() {
+    return {
+      authenticated: false,
+      user: {
+        id: null,
+        name: null
+      }
+    };
+  },
+  mounted() {
+    if (!this.authenticated) {
+      this.$router.replace({ name: "login" });
+    }
+  },
+  methods: {
+    setUser(user) {
+      this.authenticated = user.authenticated;
+      this.user.id = user.id;
+      this.user.name = user.name;
+    },
+    logout() {
+      this.authenticated = false;
+      this.user.id = null;
+      this.user.name = null;
+    }
+  }
+};
+</script>
