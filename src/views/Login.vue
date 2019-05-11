@@ -44,7 +44,6 @@ export default {
   },
   methods: {
     onSubmit() {
-      console.log("submitting");
       if (
         this.user.username &&
         this.user.password &&
