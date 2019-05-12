@@ -2,20 +2,7 @@
   <div id="app">
     <v-app id="inspire">
       <v-content>
-        <v-container fluid fill-height>
-          <v-layout align-center justify-center>
-            <div id="nav">
-              <router-link
-                v-if="authenticated"
-                to="/login"
-                v-on:click.native="logout()"
-                replace
-                >Logout</router-link
-              >
-            </div>
-            <router-view @authenticated="setUser" />
-          </v-layout>
-        </v-container>
+        <router-view :user="user" @authenticated="setUser" />
       </v-content>
     </v-app>
   </div>
