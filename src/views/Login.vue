@@ -42,18 +42,16 @@ export default {
         username: null,
         password: null,
         authenticated: false
-      },
-      errors: []
+      }
     };
   },
   methods: {
     onSubmit() {
-      this.$emit("authenticated", {
-        name: "tester",
-        id: 223,
-        authenticated: true
-      });
-      this.$router.replace({ name: "home" });
+      // this.$emit("authenticated", {
+      //   name: "tester",
+      //   id: 223,
+      //   authenticated: true
+      // });
       if (
         this.user.username &&
         this.user.password &&
@@ -71,16 +69,20 @@ export default {
           .then(response => {
             let user = response.data;
             this.$emit("authenticated", user);
-            this.$router.replace({ name: "home" });
             this.user.username = null;
             this.user.password = null;
           })
           .catch(error => {
-            console.log("There was an error:", error.response); // Logs out the error
+            this.$emit("notify", {
+              type: "error",
+              text: error.message
+            });
           });
       } else {
-        if (!this.user.username) this.errors.push("Username Required");
-        if (!this.user.password) this.errors.push("Password Required");
+        this.$emit("notify", {
+          type: "error",
+          text: "Username and Password Required"
+        });
       }
     }
   }
