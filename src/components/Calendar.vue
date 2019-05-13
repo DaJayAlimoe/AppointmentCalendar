@@ -95,7 +95,16 @@ export default {
   },
   methods: {
     open(event) {
-      alert(event);
+      alert(
+        "----------EVENT DETAILS----------\nTitle: " +
+          event.title +
+          "\nDate: " +
+          event.date +
+          "\nTime: " +
+          event.time +
+          "\nDuration: " +
+          event.duration
+      );
     }
   }
 };
