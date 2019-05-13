@@ -1,27 +1,43 @@
 <template>
   <v-container fluid grid-list-xl>
-    <Home />
+    <v-container fluid grid-list-xl>
+      <v-layout row justify-space-between>
+        <v-flex sm4 xs12 class="text-sm-left text-xs-center">
+          <v-btn id="create_appointment" small color="primary">Create</v-btn>
+        </v-flex>
+        <v-spacer></v-spacer>
+        <v-flex sm4 xs12 class="text-sm-right text-xs-center">
+          <v-btn id="user_logout" dark small color="secondary" @click="logout"
+            >logout</v-btn
+          >
+        </v-flex>
+      </v-layout>
+      <v-spacer></v-spacer>
+      <v-layout align-center justify-space-around row>
+        <v-flex xs12>
+          <Calendar />
+        </v-flex>
+      </v-layout>
+    </v-container>
   </v-container>
 </template>
 
 <script>
-import Home from "@/components/Home.vue";
+import Calendar from "@/components/Calendar.vue";
 export default {
+  name: "Home",
   data() {
     return {};
   },
   components: {
-    Home
-  },
-  computed: {
-    layoutAttributes() {
-      return {};
-    }
+    Calendar
   },
   methods: {
-    formatAttributes() {
-      return ``;
+    logout() {
+      this.$emit("logout");
+      this.$router.replace({ name: "login" });
     }
   }
 };
 </script>
+<style lang="scss" scoped></style>

@@ -5,8 +5,8 @@
         <v-calendar
           ref="calendar"
           v-model="start"
-          type="week"
           :end="end"
+          type="week"
           color="primary"
         ></v-calendar>
       </v-sheet>
@@ -31,17 +31,9 @@
 <script>
 export default {
   data: () => ({
-    type: "month",
+    events: [],
     start: "2019-01-01",
-    end: "2019-01-06",
-    typeOptions: [
-      { text: "Day", value: "day" },
-      { text: "4 Day", value: "4day" },
-      { text: "Week", value: "week" },
-      { text: "Month", value: "month" },
-      { text: "Custom Daily", value: "custom-daily" },
-      { text: "Custom Weekly", value: "custom-weekly" }
-    ]
+    end: "2019-01-06"
   })
 };
 </script>

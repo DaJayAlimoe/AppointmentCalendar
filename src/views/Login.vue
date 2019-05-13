@@ -48,7 +48,11 @@ export default {
   },
   methods: {
     onSubmit() {
-      this.$emit("authenticated", {});
+      this.$emit("authenticated", {
+        name: "tester",
+        id: 223,
+        authenticated: true
+      });
       this.$router.replace({ name: "home" });
       if (
         this.user.username &&

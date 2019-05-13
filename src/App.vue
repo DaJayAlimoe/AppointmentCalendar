@@ -2,7 +2,7 @@
   <div id="app">
     <v-app id="inspire">
       <v-content>
-        <router-view :user="user" @authenticated="setUser" />
+        <router-view :user="user" @authenticated="setUser" @logout="logout" />
       </v-content>
     </v-app>
   </div>

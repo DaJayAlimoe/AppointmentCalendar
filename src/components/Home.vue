@@ -27,6 +27,9 @@ export default {
   },
   components: {
     Calendar
+  },
+  methods: {
+    logout() {}
   }
 };
 </script>
