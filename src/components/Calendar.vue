@@ -2,13 +2,38 @@
   <v-layout wrap>
     <v-flex xs12 class="mb-3">
       <v-sheet height="500">
-        <v-calendar
-          ref="calendar"
-          v-model="start"
-          :end="end"
-          type="week"
-          color="primary"
-        ></v-calendar>
+        <v-calendar ref="calendar" v-model="today" type="week" color="primary">
+          <!-- the events at the top (all-day) -->
+          <template v-slot:dayHeader="{ date }">
+            <template v-for="event in eventsMap[date]">
+              <!-- all day events don't have time -->
+              <div
+                v-if="!event.time"
+                :key="event.title"
+                class="my-event"
+                @click="open(event)"
+                v-html="event.title"
+              ></div>
+            </template>
+          </template>
+          <!-- the events at the bottom (timed) -->
+          <template v-slot:dayBody="{ date, timeToY, minutesToPixels }">
+            <template v-for="event in eventsMap[date]">
+              <!-- timed events -->
+              <div
+                v-if="event.time"
+                :key="event.title"
+                :style="{
+                  top: timeToY(event.time) + 'px',
+                  height: minutesToPixels(event.duration) + 'px'
+                }"
+                class="my-event with-time"
+                @click="open(event)"
+                v-html="event.title"
+              ></div>
+            </template>
+          </template>
+        </v-calendar>
       </v-sheet>
     </v-flex>
     <v-layout row justify-space-between>
@@ -30,11 +55,49 @@
 
 <script>
 export default {
+  name: "Calendar",
   data: () => ({
-    events: [],
-    start: "2019-01-01",
-    end: "2019-01-06"
-  })
+    today:
+      new Date().getFullYear() +
+      "-" +
+      (new Date().getMonth() + 1) +
+      "-" +
+      new Date().getDate(),
+    events: [
+      {
+        title: "Weekly Meeting",
+        date: "2019-05-12",
+        time: "09:00",
+        duration: 45
+      },
+      {
+        title: "Thomas' Birthday",
+        date: "2019-05-13"
+      },
+      {
+        title: "Mash Potatoes",
+        date: "2019-05-14",
+        time: "12:30",
+        duration: 180
+      }
+    ]
+  }),
+  computed: {
+    // convert the list of events into a map of lists keyed by date
+    eventsMap() {
+      const map = {};
+      this.events.forEach(e => (map[e.date] = map[e.date] || []).push(e));
+      return map;
+    }
+  },
+  mounted() {
+    this.$refs.calendar.scrollToTime("08:00");
+  },
+  methods: {
+    open(event) {
+      alert(event.title);
+    }
+  }
 };
 </script>
 

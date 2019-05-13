@@ -12,6 +12,7 @@
           v-model="snackbar.state"
           :color="snackbar.type"
           :bottom="true"
+          :left="true"
           :timeout="snackbar.timeout"
         >
           {{ snackbar.text }}
@@ -51,14 +52,14 @@ export default {
         this.authenticated = user.authenticated;
         this.user.id = user.id;
         this.user.name = user.name;
-        this.notify({ type: "success", text: "Login successful" });
+        this.notify({ type: "success", text: "Login Successful" });
         this.$router.replace({ name: "home" });
       } else {
-        this.notify({ type: "error", text: "Login failed" });
+        this.notify({ type: "error", text: "Login Failed" });
       }
     },
     logout() {
-      this.notify({ type: "success", text: "Logout successful" });
+      this.notify({ type: "success", text: "Logout Successful" });
       this.authenticated = false;
       this.user.id = null;
       this.user.name = null;
