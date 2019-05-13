@@ -31,8 +31,8 @@ export default {
       snackbar: {
         state: false,
         type: "info",
-        timeout: 3000,
-        text: "No Info"
+        timeout: 1500,
+        text: ""
       },
       authenticated: false,
       user: {

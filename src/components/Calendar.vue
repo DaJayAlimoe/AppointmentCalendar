@@ -95,7 +95,7 @@ export default {
   },
   methods: {
     open(event) {
-      alert(event.title);
+      alert(event);
     }
   }
 };
