@@ -103,7 +103,8 @@ export default {
           "\nTime: " +
           event.time +
           "\nDuration: " +
-          event.duration
+          event.duration +
+          " minutes"
       );
     }
   }
