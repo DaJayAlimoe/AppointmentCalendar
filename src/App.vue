@@ -36,7 +36,6 @@ export default {
       },
       authenticated: false,
       user: {
-        id: null,
         name: null
       }
     };
@@ -50,7 +49,6 @@ export default {
     setUser(user) {
       if (user.authenticated) {
         this.authenticated = user.authenticated;
-        this.user.id = user.id;
         this.user.name = user.name;
         this.notify({ type: "success", text: "Login Successful" });
         this.$router.replace({ name: "home" });
@@ -61,7 +59,6 @@ export default {
     logout() {
       this.notify({ type: "success", text: "Logout Successful" });
       this.authenticated = false;
-      this.user.id = null;
       this.user.name = null;
     },
     notify(snackbar) {

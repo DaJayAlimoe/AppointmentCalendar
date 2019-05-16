@@ -49,7 +49,6 @@ export default {
     onSubmit() {
       this.$emit("authenticated", {
         name: "tester",
-        id: 223,
         authenticated: true
       });
       if (
@@ -57,18 +56,13 @@ export default {
         this.user.password &&
         !this.user.authenticated
       ) {
-        // this.$emit("authenticated", {
-        //   name: this.user.username,
-        //   id: this.user.password,
-        //   authenticated: true
-        // });
-        // this.$router.replace({ name: "home" });
-        // this.user.username = null;
-        // this.user.password = null;
         UserService.login(this.user.username, this.user.password)
           .then(response => {
-            let user = response.data;
-            this.$emit("authenticated", user);
+            console.log(response);
+            this.$emit("authenticated", {
+              name: this.user.username,
+              authenticated: response.data
+            });
             this.user.username = null;
             this.user.password = null;
           })
