@@ -47,10 +47,6 @@ export default {
   },
   methods: {
     onSubmit() {
-      this.$emit("authenticated", {
-        name: "tester",
-        authenticated: true
-      });
       if (
         this.user.username &&
         this.user.password &&
@@ -58,13 +54,19 @@ export default {
       ) {
         UserService.login(this.user.username, this.user.password)
           .then(response => {
-            console.log(response);
-            this.$emit("authenticated", {
-              name: this.user.username,
-              authenticated: response.data
-            });
-            this.user.username = null;
-            this.user.password = null;
+            if (response.data) {
+              this.$emit("authenticated", {
+                name: this.user.username,
+                authenticated: response.data
+              });
+              this.user.username = null;
+              this.user.password = null;
+            } else {
+              this.$emit("notify", {
+                type: "error",
+                text: "Invalid Credentials try again!"
+              });
+            }
           })
           .catch(error => {
             this.$emit("notify", {
