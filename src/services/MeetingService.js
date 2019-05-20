@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: `http://localhost:3000`,
+  baseURL: `http://localhost:8082`,
   withCredentials: false, // This is the default
   headers: {
     Accept: "application/json",
@@ -10,8 +10,8 @@ const apiClient = axios.create({
 });
 
 export default {
-  createAppointment(appointment) {
-    return apiClient.post("/meeting", appointment);
+  getUserEvents(username) {
+    return apiClient.get(`/meeting/${username}`);
     // return apiClient.get("/appointment?name=" + username + "&password=" + password);
   }
 };

@@ -65,16 +65,20 @@ export default {
       new Date().getDate(),
     events: [
       {
+        owner: "ronny",
         title: "Weekly Meeting",
         date: "2019-05-12",
         time: "09:00",
-        duration: 45
+        duration: 45,
+        attendees: []
       },
       {
+        owner: "ronny",
         title: "Thomas' Birthday",
         date: "2019-05-13"
       },
       {
+        owner: "ronny",
         title: "Mash Potatoes",
         date: "2019-05-14",
         time: "12:30",
