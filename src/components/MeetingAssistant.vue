@@ -48,7 +48,7 @@
                 </template>
                 <v-date-picker v-model="date" scrollable :landscape="true">
                   <v-spacer></v-spacer>
-                  <v-btn flat color="primary" @click="menu = false"
+                  <v-btn flat color="primary" @click="date_menu = false"
                     >Cancel</v-btn
                   >
                   <v-btn flat color="primary" @click="$refs.menu1.save(date)"
@@ -103,25 +103,35 @@
           </v-layout>
 
           <v-divider></v-divider>
+
           <v-layout row wrap>
             <v-flex xs10 left>
               <v-subheader>Invitations</v-subheader>
             </v-flex>
             <v-flex xs2>
-              <v-btn>Add</v-btn>
+              <v-btn @click="addAttendee()">Add</v-btn>
             </v-flex>
           </v-layout>
-          <v-list three-line subheader>
+          <v-layout row wrap>
+            <template v-for="(attendee, index) in attendees">
+              <component
+                :is="attendee"
+                :key="attendee.name"
+                :id="index"
+                @remove="removeAttendee"
+              ></component>
+            </template>
+          </v-layout>
+          <!-- <v-list three-line subheader>
             <v-list-tile avatar>
               <v-list-tile-action>
                 <v-checkbox v-model="notifications"></v-checkbox>
               </v-list-tile-action>
               <v-list-tile-content>
                 <v-list-tile-title>Notifications</v-list-tile-title>
-                <v-list-tile-sub-title
-                  >Notify me about updates to apps or games that I
-                  downloaded</v-list-tile-sub-title
-                >
+                <v-list-tile-sub-title>
+                  Notify me about updates to apps or games that I downloaded
+                </v-list-tile-sub-title>
               </v-list-tile-content>
             </v-list-tile>
             <v-list-tile avatar>
@@ -130,10 +140,9 @@
               </v-list-tile-action>
               <v-list-tile-content>
                 <v-list-tile-title>Sound</v-list-tile-title>
-                <v-list-tile-sub-title
-                  >Auto-update apps at any time. Data charges may
-                  apply</v-list-tile-sub-title
-                >
+                <v-list-tile-sub-title>
+                  Auto-update apps at any time. Data charges may apply
+                </v-list-tile-sub-title>
               </v-list-tile-content>
             </v-list-tile>
             <v-list-tile avatar>
@@ -147,7 +156,7 @@
                 >
               </v-list-tile-content>
             </v-list-tile>
-          </v-list>
+          </v-list>-->
         </v-container>
       </v-card>
     </v-dialog>
@@ -155,8 +164,12 @@
 </template>
 
 <script>
+import Attendee from "@/components/Attendee.vue";
 export default {
   props: ["visible"],
+  components: {
+    Attendee
+  },
   data() {
     return {
       date: null,
@@ -167,7 +180,8 @@ export default {
       rules: {
         daylimit: value =>
           value <= 24 || "Duration cannot be longer than 24 hours"
-      }
+      },
+      attendees: []
     };
   },
   computed: {
@@ -179,6 +193,17 @@ export default {
         if (!value) {
           this.$emit("close");
         }
+      }
+    }
+  },
+  methods: {
+    addAttendee() {
+      this.attendees.push(Attendee);
+    },
+    removeAttendee(index) {
+      console.log(`trying to remove ${index}`);
+      if (index > -1) {
+        this.attendees.splice(index, 1);
       }
     }
   }
