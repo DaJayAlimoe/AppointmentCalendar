@@ -97,47 +97,58 @@
                 min="0.5"
                 max="24"
                 required
+                :rules="[rules.daylimit]"
               />
             </v-flex>
           </v-layout>
+
+          <v-divider></v-divider>
+          <v-layout row wrap>
+            <v-flex xs10 left>
+              <v-subheader>Invitations</v-subheader>
+            </v-flex>
+            <v-flex xs2>
+              <v-btn>Add</v-btn>
+            </v-flex>
+          </v-layout>
+          <v-list three-line subheader>
+            <v-list-tile avatar>
+              <v-list-tile-action>
+                <v-checkbox v-model="notifications"></v-checkbox>
+              </v-list-tile-action>
+              <v-list-tile-content>
+                <v-list-tile-title>Notifications</v-list-tile-title>
+                <v-list-tile-sub-title
+                  >Notify me about updates to apps or games that I
+                  downloaded</v-list-tile-sub-title
+                >
+              </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile avatar>
+              <v-list-tile-action>
+                <v-checkbox v-model="sound"></v-checkbox>
+              </v-list-tile-action>
+              <v-list-tile-content>
+                <v-list-tile-title>Sound</v-list-tile-title>
+                <v-list-tile-sub-title
+                  >Auto-update apps at any time. Data charges may
+                  apply</v-list-tile-sub-title
+                >
+              </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile avatar>
+              <v-list-tile-action>
+                <v-checkbox v-model="widgets"></v-checkbox>
+              </v-list-tile-action>
+              <v-list-tile-content>
+                <v-list-tile-title>Auto-add widgets</v-list-tile-title>
+                <v-list-tile-sub-title
+                  >Automatically add home screen widgets</v-list-tile-sub-title
+                >
+              </v-list-tile-content>
+            </v-list-tile>
+          </v-list>
         </v-container>
-        <v-divider></v-divider>
-        <!-- <v-list three-line subheader>
-          <v-subheader>General</v-subheader>
-          <v-list-tile avatar>
-            <v-list-tile-action>
-              <v-checkbox v-model="notifications"></v-checkbox>
-            </v-list-tile-action>
-            <v-list-tile-content>
-              <v-list-tile-title>Notifications</v-list-tile-title>
-              <v-list-tile-sub-title>
-                Notify me about updates to apps or games that I downloaded
-              </v-list-tile-sub-title>
-            </v-list-tile-content>
-          </v-list-tile>
-          <v-list-tile avatar>
-            <v-list-tile-action>
-              <v-checkbox v-model="sound"></v-checkbox>
-            </v-list-tile-action>
-            <v-list-tile-content>
-              <v-list-tile-title>Sound</v-list-tile-title>
-              <v-list-tile-sub-title>
-                Auto-update apps at any time. Data charges may apply
-              </v-list-tile-sub-title>
-            </v-list-tile-content>
-          </v-list-tile>
-          <v-list-tile avatar>
-            <v-list-tile-action>
-              <v-checkbox v-model="widgets"></v-checkbox>
-            </v-list-tile-action>
-            <v-list-tile-content>
-              <v-list-tile-title>Auto-add widgets</v-list-tile-title>
-              <v-list-tile-sub-title
-                >Automatically add home screen widgets</v-list-tile-sub-title
-              >
-            </v-list-tile-content>
-          </v-list-tile>
-        </v-list>-->
       </v-card>
     </v-dialog>
   </v-layout>
@@ -148,11 +159,15 @@ export default {
   props: ["visible"],
   data() {
     return {
-      date: new Date().toISOString().substring(0, 10),
+      date: null,
       date_menu: false,
       time: null,
       time_menu: false,
-      duration: null
+      duration: null,
+      rules: {
+        daylimit: value =>
+          value <= 24 || "Duration cannot be longer than 24 hours"
+      }
     };
   },
   computed: {
