@@ -3,7 +3,14 @@
     <v-container fluid grid-list-xl>
       <v-layout row justify-space-between>
         <v-flex sm4 xs12 class="text-sm-left text-xs-center">
-          <v-btn id="create_appointment" small color="primary">Create</v-btn>
+          <v-btn
+            id="create_appointment"
+            small
+            color="primary"
+            @click.stop="dialog = true"
+            >Create</v-btn
+          >
+          <MeetingAssistant :visible="dialog" @close="dialog = false" />
         </v-flex>
         <v-spacer></v-spacer>
         <v-flex sm4 xs12 class="text-sm-right text-xs-center">
@@ -24,13 +31,17 @@
 
 <script>
 import Calendar from "@/components/Calendar.vue";
+import MeetingAssistant from "@/components/MeetingAssistant.vue";
 export default {
   name: "Home",
   data() {
-    return {};
+    return {
+      dialog: false
+    };
   },
   components: {
-    Calendar
+    Calendar,
+    MeetingAssistant
   },
   methods: {
     logout() {
