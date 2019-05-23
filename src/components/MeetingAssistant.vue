@@ -108,55 +108,31 @@
             <v-flex xs10 left>
               <v-subheader>Invitations</v-subheader>
             </v-flex>
-            <v-flex xs2>
+            <v-flex xs1>
+              <v-btn @click="removeAttendee()">
+                <v-icon>delete</v-icon>
+              </v-btn>
+            </v-flex>
+            <v-flex xs1>
               <v-btn @click="addAttendee()">Add</v-btn>
             </v-flex>
           </v-layout>
           <v-layout row wrap>
-            <template v-for="(attendee, index) in attendees">
-              <component
-                :is="attendee"
-                :key="attendee.name"
-                :id="index"
-                @remove="removeAttendee"
-              ></component>
+            <template v-for="attendee in attendees">
+              <component :is="attendee" :key="attendee.name"></component>
             </template>
           </v-layout>
-          <!-- <v-list three-line subheader>
-            <v-list-tile avatar>
-              <v-list-tile-action>
-                <v-checkbox v-model="notifications"></v-checkbox>
-              </v-list-tile-action>
-              <v-list-tile-content>
-                <v-list-tile-title>Notifications</v-list-tile-title>
-                <v-list-tile-sub-title>
-                  Notify me about updates to apps or games that I downloaded
-                </v-list-tile-sub-title>
-              </v-list-tile-content>
-            </v-list-tile>
-            <v-list-tile avatar>
-              <v-list-tile-action>
-                <v-checkbox v-model="sound"></v-checkbox>
-              </v-list-tile-action>
-              <v-list-tile-content>
-                <v-list-tile-title>Sound</v-list-tile-title>
-                <v-list-tile-sub-title>
-                  Auto-update apps at any time. Data charges may apply
-                </v-list-tile-sub-title>
-              </v-list-tile-content>
-            </v-list-tile>
-            <v-list-tile avatar>
-              <v-list-tile-action>
-                <v-checkbox v-model="widgets"></v-checkbox>
-              </v-list-tile-action>
-              <v-list-tile-content>
-                <v-list-tile-title>Auto-add widgets</v-list-tile-title>
-                <v-list-tile-sub-title
-                  >Automatically add home screen widgets</v-list-tile-sub-title
-                >
-              </v-list-tile-content>
-            </v-list-tile>
-          </v-list>-->
+
+          <v-divider></v-divider>
+
+          <v-layout row wrap>
+            <v-flex xs10 left>
+              <v-subheader>Resources</v-subheader>
+            </v-flex>
+          </v-layout>
+          <v-layout row wrap>
+            <v-spacer></v-spacer>
+          </v-layout>
         </v-container>
       </v-card>
     </v-dialog>
@@ -200,11 +176,8 @@ export default {
     addAttendee() {
       this.attendees.push(Attendee);
     },
-    removeAttendee(index) {
-      console.log(`trying to remove ${index}`);
-      if (index > -1) {
-        this.attendees.splice(index, 1);
-      }
+    removeAttendee() {
+      this.attendees.splice(this.attendees.length - 1, 1);
     }
   }
 };
