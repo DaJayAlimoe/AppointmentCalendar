@@ -22,7 +22,7 @@
       <v-spacer></v-spacer>
       <v-layout align-center justify-space-around row>
         <v-flex xs12>
-          <Calendar />
+          <Calendar :user="this.user" />
         </v-flex>
       </v-layout>
     </v-container>
@@ -34,6 +34,7 @@ import Calendar from "@/components/Calendar.vue";
 import MeetingAssistant from "@/components/MeetingAssistant.vue";
 export default {
   name: "Home",
+  props: ["user"],
   data() {
     return {
       dialog: false

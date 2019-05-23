@@ -54,8 +54,10 @@
 </template>
 
 <script>
+import MeetingService from "@/services/MeetingService.js";
 export default {
   name: "Calendar",
+  props: ["user"],
   data: () => ({
     today:
       new Date().getFullYear() +
@@ -64,26 +66,26 @@ export default {
       "-" +
       new Date().getDate(),
     events: [
-      {
-        owner: "ronny",
-        title: "Weekly Meeting",
-        date: "2019-05-12",
-        time: "09:00",
-        duration: 45,
-        attendees: []
-      },
-      {
-        owner: "ronny",
-        title: "Thomas' Birthday",
-        date: "2019-05-13"
-      },
-      {
-        owner: "ronny",
-        title: "Mash Potatoes",
-        date: "2019-05-14",
-        time: "12:30",
-        duration: 180
-      }
+      // {
+      //   owner: "ronny",
+      //   title: "Weekly Meeting",
+      //   date: "2019-05-12",
+      //   time: "09:00",
+      //   duration: 45,
+      //   attendees: []
+      // },
+      // {
+      //   owner: "ronny",
+      //   title: "Thomas' Birthday",
+      //   date: "2019-05-13"
+      // },
+      // {
+      //   owner: "ronny",
+      //   title: "Mash Potatoes",
+      //   date: "2019-05-14",
+      //   time: "12:30",
+      //   duration: 180
+      // }
     ]
   }),
   computed: {
@@ -95,6 +97,23 @@ export default {
     }
   },
   mounted() {
+    MeetingService.getUserEvents(this.user.name)
+      .then(response => {
+        if (response.data) {
+          this.events = response.data;
+        } else {
+          this.$emit("notify", {
+            type: "info",
+            text: `No events found for user ${this.user.name}`
+          });
+        }
+      })
+      .catch(error => {
+        this.$emit("notify", {
+          type: "error",
+          text: error.message
+        });
+      });
     this.$refs.calendar.scrollToTime("08:00");
   },
   methods: {

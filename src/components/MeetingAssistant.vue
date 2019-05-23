@@ -119,7 +119,11 @@
           </v-layout>
           <v-layout row wrap>
             <template v-for="attendee in attendees">
-              <component :is="attendee" :key="attendee.name"></component>
+              <component
+                :is="attendee"
+                :key="attendee.name"
+                :user="this.user"
+              ></component>
             </template>
           </v-layout>
 
@@ -142,7 +146,7 @@
 <script>
 import Attendee from "@/components/Attendee.vue";
 export default {
-  props: ["visible"],
+  props: ["visible", "user"],
   components: {
     Attendee
   },
