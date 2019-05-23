@@ -119,11 +119,7 @@
           </v-layout>
           <v-layout row wrap>
             <template v-for="attendee in attendees">
-              <component
-                :is="attendee"
-                :key="attendee.name"
-                :user="this.user"
-              ></component>
+              <component :is="attendee" :key="attendee.name"></component>
             </template>
           </v-layout>
 

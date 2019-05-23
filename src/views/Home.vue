@@ -10,7 +10,11 @@
             @click.stop="dialog = true"
             >Create</v-btn
           >
-          <MeetingAssistant :visible="dialog" @close="dialog = false" />
+          <MeetingAssistant
+            :visible="dialog"
+            @close="dialog = false"
+            :user="this.user"
+          />
         </v-flex>
         <v-spacer></v-spacer>
         <v-flex sm4 xs12 class="text-sm-right text-xs-center">
