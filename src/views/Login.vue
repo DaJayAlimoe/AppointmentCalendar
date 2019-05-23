@@ -47,10 +47,10 @@ export default {
   },
   methods: {
     onSubmit() {
-      this.$emit("authenticated", {
-        name: "tester",
-        authenticated: true
-      });
+      // this.$emit("authenticated", {
+      //   name: "tester",
+      //   authenticated: true
+      // });
       if (
         this.user.username &&
         this.user.password &&

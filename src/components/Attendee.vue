@@ -14,7 +14,7 @@
       <v-card-text class="py-0">
         <v-timeline align-top dense>
           <template v-for="event in events">
-            <v-timeline-item color="secondary" small :key="event.time">
+            <v-timeline-item color="warning" small :key="event.time">
               <v-layout pt-3>
                 <v-flex xs3>
                   <strong>{{ event.time }}</strong>

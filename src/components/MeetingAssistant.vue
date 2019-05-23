@@ -114,7 +114,7 @@
               </v-btn>
             </v-flex>
             <v-flex xs1>
-              <v-btn @click="addAttendee()">Add</v-btn>
+              <v-btn color="secondary" @click="addAttendee()">Add</v-btn>
             </v-flex>
           </v-layout>
           <v-layout row wrap>
