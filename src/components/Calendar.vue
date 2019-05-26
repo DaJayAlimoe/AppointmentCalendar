@@ -99,6 +99,7 @@ export default {
       );
     },
     addCalUser(username, color) {
+      console.log("adding : " + username);
       this.userColor[username] = color;
       this.events.concat([
         {

@@ -111,20 +111,18 @@
           </v-layout>
           <v-layout row wrap>
             <v-flex xs10 left>
-              <Calendar :user="this.user" />
+              <Calendar :user="this.user" ref="sharedCalendar" />
             </v-flex>
             <v-flex xs2>
               <v-list two-line subheader>
                 <v-list-tile avatar v-for="user in users" :key="user.name">
                   <v-list-tile-action>
-                    <v-switch v-model="user.selected"></v-switch>
+                    <v-switch
+                      v-model="user.selected"
+                      :color="user.color"
+                      @change="inviteUser(user)"
+                    ></v-switch>
                   </v-list-tile-action>
-
-                  <v-badge left color="user.selectedcolor">
-                    <template v-slot:badge>
-                      <v-icon dark small>mdi-adjust</v-icon>
-                    </template>
-                  </v-badge>
 
                   <v-list-tile-content>
                     <v-list-tile-title>{{ user.name }}</v-list-tile-title>
@@ -188,17 +186,17 @@ export default {
       users: [
         {
           name: "Ronny",
-          color: "#" + ((Math.random() * 0xffffff) << 0).toString(16) + ";",
+          color: "deep-purple",
           selected: false
         },
         {
           name: "Mike",
-          color: "#" + ((Math.random() * 0xffffff) << 0).toString(16) + ";",
+          color: "teal",
           selected: false
         },
         {
           name: "Pam",
-          color: "#" + ((Math.random() * 0xffffff) << 0).toString(16) + ";",
+          color: "amber",
           selected: false
         }
       ],
@@ -224,6 +222,9 @@ export default {
     },
     removeResource() {
       this.resources.splice(this.resources.length - 1, 1);
+    },
+    inviteUser(user) {
+      this.$refs.sharedCalendar.addCalUser(user.name, user.color);
     }
   }
 };
