@@ -105,22 +105,36 @@
           <v-divider></v-divider>
 
           <v-layout row wrap>
-            <v-flex xs10 left>
+            <v-flex xs12 left>
               <v-subheader>Invitations</v-subheader>
-            </v-flex>
-            <v-flex xs1>
-              <v-btn @click="removeAttendee()">
-                <v-icon>delete</v-icon>
-              </v-btn>
-            </v-flex>
-            <v-flex xs1>
-              <v-btn color="secondary" @click="addAttendee()">Add</v-btn>
             </v-flex>
           </v-layout>
           <v-layout row wrap>
-            <template v-for="attendee in attendees">
-              <component :is="attendee" :key="attendee.name"></component>
-            </template>
+            <v-flex xs10 left>
+              <Calendar :user="this.user" />
+            </v-flex>
+            <v-flex xs2>
+              <v-list two-line subheader>
+                <v-list-tile avatar v-for="user in users" :key="user.name">
+                  <v-list-tile-action>
+                    <v-switch v-model="user.selected"></v-switch>
+                  </v-list-tile-action>
+
+                  <v-badge left color="user.selectedcolor">
+                    <template v-slot:badge>
+                      <v-icon dark small>mdi-adjust</v-icon>
+                    </template>
+                  </v-badge>
+
+                  <v-list-tile-content>
+                    <v-list-tile-title>{{ user.name }}</v-list-tile-title>
+                    <!-- <v-list-tile-sub-title>
+                      {{ user.department }}
+                    </v-list-tile-sub-title>-->
+                  </v-list-tile-content>
+                </v-list-tile>
+              </v-list>
+            </v-flex>
           </v-layout>
 
           <v-divider></v-divider>
@@ -129,10 +143,22 @@
             <v-flex xs10 left>
               <v-subheader>Resources</v-subheader>
             </v-flex>
+            <v-flex xs1>
+              <v-btn @click="removeResource()">
+                <v-icon>delete</v-icon>
+              </v-btn>
+            </v-flex>
+            <v-flex xs1>
+              <v-btn color="secondary" @click="addResource()">Add</v-btn>
+            </v-flex>
           </v-layout>
           <v-layout row wrap>
-            <v-spacer></v-spacer>
+            <template v-for="resource in resources">
+              <component :is="resource" :key="resource.name"></component>
+            </template>
           </v-layout>
+
+          <v-divider></v-divider>
         </v-container>
       </v-card>
     </v-dialog>
@@ -140,11 +166,13 @@
 </template>
 
 <script>
-import Attendee from "@/components/Attendee.vue";
+import Calendar from "@/components/Calendar.vue";
+import Resource from "@/components/Resource.vue";
 export default {
   props: ["visible", "user"],
   components: {
-    Attendee
+    Resource,
+    Calendar
   },
   data() {
     return {
@@ -157,7 +185,24 @@ export default {
         daylimit: value =>
           value <= 24 || "Duration cannot be longer than 24 hours"
       },
-      attendees: []
+      users: [
+        {
+          name: "Ronny",
+          color: "#" + ((Math.random() * 0xffffff) << 0).toString(16) + ";",
+          selected: false
+        },
+        {
+          name: "Mike",
+          color: "#" + ((Math.random() * 0xffffff) << 0).toString(16) + ";",
+          selected: false
+        },
+        {
+          name: "Pam",
+          color: "#" + ((Math.random() * 0xffffff) << 0).toString(16) + ";",
+          selected: false
+        }
+      ],
+      resources: []
     };
   },
   computed: {
@@ -173,11 +218,12 @@ export default {
     }
   },
   methods: {
-    addAttendee() {
-      this.attendees.push(Attendee);
+    addResource(name) {
+      this.resources.push(Resource);
+      this.$emit("invitation", name);
     },
-    removeAttendee() {
-      this.attendees.splice(this.attendees.length - 1, 1);
+    removeResource() {
+      this.resources.splice(this.resources.length - 1, 1);
     }
   }
 };

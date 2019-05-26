@@ -11,6 +11,9 @@
                 v-if="!event.time"
                 :key="event.title"
                 class="my-event"
+                :style="{
+                  color: getuserColor(event.owner)
+                }"
                 @click="open(event)"
                 v-html="event.title"
               ></div>
@@ -25,7 +28,8 @@
                 :key="event.title"
                 :style="{
                   top: timeToY(event.time) + 'px',
-                  height: minutesToPixels(event.duration) + 'px'
+                  height: minutesToPixels(event.duration) + 'px',
+                  color: getuserColor(event.owner)
                 }"
                 class="my-event with-time"
                 @click="open(event)"
@@ -54,7 +58,7 @@
 </template>
 
 <script>
-import MeetingService from "@/services/MeetingService.js";
+// import MeetingService from "@/services/MeetingService.js";
 export default {
   name: "Calendar",
   props: ["user"],
@@ -65,28 +69,8 @@ export default {
       (new Date().getMonth() + 1) +
       "-" +
       new Date().getDate(),
-    events: [
-      // {
-      //   owner: "ronny",
-      //   title: "Weekly Meeting",
-      //   date: "2019-05-12",
-      //   time: "09:00",
-      //   duration: 45,
-      //   attendees: []
-      // },
-      // {
-      //   owner: "ronny",
-      //   title: "Thomas' Birthday",
-      //   date: "2019-05-13"
-      // },
-      // {
-      //   owner: "ronny",
-      //   title: "Mash Potatoes",
-      //   date: "2019-05-14",
-      //   time: "12:30",
-      //   duration: 180
-      // }
-    ]
+    events: [],
+    userColor: {}
   }),
   computed: {
     // convert the list of events into a map of lists keyed by date
@@ -97,23 +81,7 @@ export default {
     }
   },
   mounted() {
-    MeetingService.getUserEvents(this.user.name)
-      .then(response => {
-        if (response.data) {
-          this.events = response.data;
-        } else {
-          this.$emit("notify", {
-            type: "info",
-            text: `No events found for user ${this.user.name}`
-          });
-        }
-      })
-      .catch(error => {
-        this.$emit("notify", {
-          type: "error",
-          text: error.message
-        });
-      });
+    this.addCalUser(this.user.name, this.user.color);
     this.$refs.calendar.scrollToTime("08:00");
   },
   methods: {
@@ -129,6 +97,53 @@ export default {
           event.duration +
           " minutes"
       );
+    },
+    addCalUser(username, color) {
+      this.userColor[username] = color;
+      this.events.concat([
+        {
+          owner: username,
+          title: "Weekly Meeting",
+          date: "2019-05-26",
+          time: "09:00",
+          duration: 45,
+          attendees: []
+        },
+        {
+          owner: username,
+          title: "Thomas' Birthday",
+          date: "2019-05-27"
+        },
+        {
+          owner: username,
+          title: "Mash Potatoes",
+          date: "2019-05-28",
+          time: "12:30",
+          duration: 180
+        }
+      ]);
+      // MeetingService.getUserEvents(username)
+      //   .then(response => {
+      //     if (response.data) {
+      //       this.users[username]["color"] =
+      //         "#" + ((Math.random() * 0xffffff) << 0).toString(16);
+      //       this.events.concat(response.data);
+      //     } else {
+      //       this.$emit("notify", {
+      //         type: "info",
+      //         text: `No events found for user ${username}`
+      //       });
+      //     }
+      //   })
+      //   .catch(error => {
+      //     this.$emit("notify", {
+      //       type: "error",
+      //       text: error.message
+      //     });
+      //   });
+    },
+    getuserColor(username) {
+      return this.userColor[username];
     }
   }
 };
@@ -140,8 +155,6 @@ export default {
   text-overflow: ellipsis;
   white-space: nowrap;
   border-radius: 2px;
-  background-color: #1867c0;
-  color: #ffffff;
   border: 1px solid #1867c0;
   font-size: 12px;
   padding: 3px;

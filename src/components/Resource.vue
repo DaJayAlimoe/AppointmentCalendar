@@ -4,9 +4,9 @@
       <v-card flat>
         <v-card-title>
           <v-select
-            v-model="selectedAttendee"
+            v-model="selected"
             :items="users"
-            placeholder="Select Attendee Name"
+            placeholder="Select Resource"
             solo
           ></v-select>
         </v-card-title>
@@ -35,8 +35,8 @@
 export default {
   data() {
     return {
-      users: ["Ronny", "Pam", "Mike"],
-      selectedAttendee: null,
+      users: ["Beamer", "Room", "Whiteboard"],
+      selected: null,
       events: [
         {
           title: "Weekly Meeting",

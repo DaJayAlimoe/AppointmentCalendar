@@ -36,7 +36,8 @@ export default {
       },
       authenticated: false,
       user: {
-        name: null
+        name: null,
+        color: null
       }
     };
   },
@@ -50,6 +51,7 @@ export default {
       if (user.authenticated) {
         this.authenticated = user.authenticated;
         this.user.name = user.name;
+        this.user.color = user.color;
         this.notify({ type: "success", text: "Login Successful" });
         this.$router.replace({ name: "home" });
       } else {

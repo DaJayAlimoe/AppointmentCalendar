@@ -47,10 +47,11 @@ export default {
   },
   methods: {
     onSubmit() {
-      // this.$emit("authenticated", {
-      //   name: "tester",
-      //   authenticated: true
-      // });
+      this.$emit("authenticated", {
+        name: "tester",
+        color: "#1867c0;",
+        authenticated: true
+      });
       if (
         this.user.username &&
         this.user.password &&
