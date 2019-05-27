@@ -14,13 +14,18 @@
           <v-toolbar-title>Meeting Assistant</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-toolbar-items>
-            <v-btn dark flat @click.stop="show = false">Save</v-btn>
+            <v-btn dark flat @click.stop="saveEvent()">Save</v-btn>
           </v-toolbar-items>
         </v-toolbar>
         <v-container grid-list-md text-xs-center>
           <v-layout row wrap>
             <v-flex xs12>
-              <v-text-field label="Event Title" required></v-text-field>
+              <v-text-field
+                v-model="title"
+                type="text"
+                label="Event Title"
+                required
+              ></v-text-field>
             </v-flex>
           </v-layout>
           <v-layout row wrap>
@@ -182,6 +187,7 @@ import Calendar from "@/components/Calendar.vue";
 import Resource from "@/components/Resource.vue";
 import UserService from "@/services/UserService.js";
 import ResourceService from "@/services/ResourceService.js";
+import MeetingService from "@/services/MeetingService.js";
 export default {
   props: ["visible", "user"],
   components: {
@@ -190,6 +196,7 @@ export default {
   },
   data() {
     return {
+      title: null,
       date: null,
       date_menu: false,
       time: null,
@@ -199,6 +206,7 @@ export default {
         daylimit: value =>
           value <= 24 || "Duration cannot be longer than 24 hours"
       },
+      attendees: [],
       users: [],
       resources: [],
       resourceNames: []
@@ -270,7 +278,7 @@ export default {
             "," +
             o(r() * s) +
             "," +
-            r().toFixed(1) +
+            1 +
             ")";
           userMap[key]["selected"] = false;
         }
@@ -292,9 +300,52 @@ export default {
     inviteUser(user) {
       if (user.selected) {
         this.$refs.sharedCalendar.addCalUser(user.name, user.color);
+        this.attendees.push(user.name);
       } else {
         this.$refs.sharedCalendar.removeCalUser(user.name);
+        this.attendees.splice(this.attendees.indexOf(user.name), 1);
       }
+    },
+    saveEvent() {
+      let eventObject = {
+        id: 0,
+        title: this.title,
+        date: this.date,
+        time: this.time,
+        duration: this.duration * 60,
+        owner: this.user.name,
+        attendees: [],
+        ressourcen: []
+      };
+      this.attendees.forEach((attendee, index) => {
+        eventObject.attendees[index] = { name: attendee, status: 0 };
+      });
+      this.resources.forEach((resource, index) => {
+        console.log(resource.data.selected);
+        // eventObject.ressourcen[index] = resource.getSelectedResource();
+      });
+      console.log(eventObject);
+      MeetingService.createMeeting(eventObject)
+        .then(response => {
+          if (response.data) {
+            this.$emit("notify", {
+              type: "success",
+              text: "Meeting succesfully saved!"
+            });
+            this.show = false;
+          } else {
+            this.$emit("notify", {
+              type: "error",
+              text: "Could not save Meeting. Try again!"
+            });
+          }
+        })
+        .catch(error => {
+          this.$emit("notify", {
+            type: "error",
+            text: error.message
+          });
+        });
     }
   }
 };

@@ -62,7 +62,7 @@ export default {
           "," +
           o(r() * s) +
           "," +
-          r().toFixed(1) +
+          1 +
           ")";
         this.notify({ type: "success", text: "Login Successful" });
         this.$router.replace({ name: "home" });

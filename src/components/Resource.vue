@@ -83,6 +83,9 @@ export default {
             });
           });
       }
+    },
+    getSelectedResource() {
+      return this.selected;
     }
   }
 };
