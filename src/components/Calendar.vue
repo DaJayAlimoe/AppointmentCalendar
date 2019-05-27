@@ -91,7 +91,6 @@ export default {
   },
   methods: {
     open(event) {
-      console.log(event);
       alert(
         "----------EVENT DETAILS----------\nTitle: " +
           event.title +
@@ -107,8 +106,6 @@ export default {
       );
     },
     addCalUser(username, color) {
-      console.log("adding user: " + username);
-      console.log("adding user color: " + color);
       this.userColor[username] = color;
       MeetingService.getUserEvents(username)
         .then(response => {
@@ -149,17 +146,25 @@ export default {
       this.events = newEvents;
     },
     getuserColor(username) {
-      let rgb = this.userColor[username];
-      let found = rgb.match(/.*?(\d+),.*?(\d+),.*?(\d+).*?\)/);
-      let r = found[1].toString(16);
-      let g = found[2].toString(16);
-      let b = found[3].toString(16);
+      let rgba = this.userColor[username];
+      var parts = rgba.substring(rgba.indexOf("(")).split(","),
+        r = parseInt(this.trim(parts[0].substring(1)), 10),
+        g = parseInt(this.trim(parts[1]), 10),
+        b = parseInt(this.trim(parts[2]), 10),
+        a = parseFloat(
+          this.trim(parts[3].substring(0, parts[3].length - 1))
+        ).toFixed(2);
 
-      if (r.length == 1) r = "0" + r;
-      if (g.length == 1) g = "0" + g;
-      if (b.length == 1) b = "0" + b;
-
-      return "#" + r + g + b;
+      return (
+        "#" +
+        r.toString(16) +
+        g.toString(16) +
+        b.toString(16) +
+        (a * 255).toString(16)
+      ).substring(0, 7);
+    },
+    trim(str) {
+      return str.replace(/^\s+|\s+$/gm, "");
     }
   }
 };
