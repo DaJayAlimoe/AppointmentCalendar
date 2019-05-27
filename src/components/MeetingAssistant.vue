@@ -253,13 +253,25 @@ export default {
       }
     },
     calendarUsers() {
-      let colors = ["pink", "amber", "indigo", "blue", "purple", "red"];
+      // let colors = ["pink", "amber", "indigo", "blue", "purple", "red"];
       let userMap = [];
+      let o = Math.round;
+      let r = Math.random;
+      let s = 255;
       for (const key in this.users) {
         if (this.users.hasOwnProperty(key)) {
           userMap[key] = {};
           userMap[key]["name"] = this.users[key];
-          userMap[key]["color"] = colors[key];
+          userMap[key]["color"] =
+            "rgba(" +
+            o(r() * s) +
+            "," +
+            o(r() * s) +
+            "," +
+            o(r() * s) +
+            "," +
+            r().toFixed(1) +
+            ")";
           userMap[key]["selected"] = false;
         }
       }

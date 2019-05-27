@@ -48,10 +48,22 @@ export default {
   },
   methods: {
     setUser(user) {
+      let o = Math.round;
+      let r = Math.random;
+      let s = 255;
       if (user.authenticated) {
         this.authenticated = user.authenticated;
         this.user.name = user.name;
-        this.user.color = "deep-purple";
+        this.user.color =
+          "rgba(" +
+          o(r() * s) +
+          "," +
+          o(r() * s) +
+          "," +
+          o(r() * s) +
+          "," +
+          r().toFixed(1) +
+          ")";
         this.notify({ type: "success", text: "Login Successful" });
         this.$router.replace({ name: "home" });
       } else {

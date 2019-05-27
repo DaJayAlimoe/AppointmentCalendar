@@ -11,9 +11,7 @@
                 v-if="!event.time"
                 :key="event.title"
                 class="my-event"
-                :style="{
-                  backgroundColor: getuserColor(event.for)
-                }"
+                :style="{ backgroundColor: getuserColor(event.for) }"
                 @click="open(event)"
                 v-html="event.title"
               ></div>
@@ -29,7 +27,7 @@
                 :style="{
                   top: timeToY(event.time) + 'px',
                   height: minutesToPixels(event.duration) + 'px',
-                  color: getuserColor(event.owner)
+                  backgroundColor: getuserColor(event.for)
                 }"
                 class="my-event with-time"
                 @click="open(event)"
@@ -93,6 +91,7 @@ export default {
   },
   methods: {
     open(event) {
+      console.log(event);
       alert(
         "----------EVENT DETAILS----------\nTitle: " +
           event.title +
@@ -102,7 +101,9 @@ export default {
           event.time +
           "\nDuration: " +
           event.duration +
-          " minutes"
+          " minutes" +
+          "\nUser : " +
+          event.for
       );
     },
     addCalUser(username, color) {
@@ -136,17 +137,29 @@ export default {
     removeCalUser(username) {
       console.log("removing user: " + username);
       console.log("removing user color: " + this.userColor[username]);
+      let newEvents = [];
       delete this.userColor[username];
       for (const key in this.events) {
         if (this.events.hasOwnProperty(key)) {
-          if (this.events[key]["for"] == username) {
-            delete this.events[key];
+          if (this.events[key]["for"] != username) {
+            newEvents[key] = this.events[key];
           }
         }
       }
+      this.events = newEvents;
     },
     getuserColor(username) {
-      return this.userColor[username];
+      let rgb = this.userColor[username];
+      let found = rgb.match(/.*?(\d+),.*?(\d+),.*?(\d+).*?\)/);
+      let r = found[1].toString(16);
+      let g = found[2].toString(16);
+      let b = found[3].toString(16);
+
+      if (r.length == 1) r = "0" + r;
+      if (g.length == 1) g = "0" + g;
+      if (b.length == 1) b = "0" + b;
+
+      return "#" + r + g + b;
     }
   }
 };
@@ -158,6 +171,7 @@ export default {
   text-overflow: ellipsis;
   white-space: nowrap;
   border-radius: 2px;
+  color: #ffffff;
   border: 1px solid #1867c0;
   font-size: 12px;
   padding: 3px;
