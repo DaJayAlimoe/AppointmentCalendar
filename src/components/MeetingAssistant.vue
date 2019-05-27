@@ -105,17 +105,26 @@
           <v-divider></v-divider>
 
           <v-layout row wrap>
-            <v-flex xs12 left>
+            <v-flex xs11 left>
               <v-subheader>Invitations</v-subheader>
+            </v-flex>
+            <v-flex xs1>
+              <v-subheader>Users</v-subheader>
             </v-flex>
           </v-layout>
           <v-layout row wrap>
             <v-flex xs10 left>
-              <Calendar :user="this.user" ref="sharedCalendar" />
+              <v-card>
+                <Calendar :user="this.user" ref="sharedCalendar" />
+              </v-card>
             </v-flex>
             <v-flex xs2>
               <v-list two-line subheader>
-                <v-list-tile avatar v-for="user in users" :key="user.name">
+                <v-list-tile
+                  avatar
+                  v-for="user in calendarUsers"
+                  :key="user.name"
+                >
                   <v-list-tile-action>
                     <v-switch
                       v-model="user.selected"
@@ -151,8 +160,13 @@
             </v-flex>
           </v-layout>
           <v-layout row wrap>
-            <template v-for="resource in resources">
-              <component :is="resource" :key="resource.name"></component>
+            <template v-for="resource in calResources">
+              <component
+                :resources="resourceNames"
+                :date="date"
+                :is="resource"
+                :key="resource.name"
+              ></component>
             </template>
           </v-layout>
 
@@ -166,6 +180,8 @@
 <script>
 import Calendar from "@/components/Calendar.vue";
 import Resource from "@/components/Resource.vue";
+import UserService from "@/services/UserService.js";
+import ResourceService from "@/services/ResourceService.js";
 export default {
   props: ["visible", "user"],
   components: {
@@ -183,25 +199,47 @@ export default {
         daylimit: value =>
           value <= 24 || "Duration cannot be longer than 24 hours"
       },
-      users: [
-        {
-          name: "Ronny",
-          color: "deep-purple",
-          selected: false
-        },
-        {
-          name: "Mike",
-          color: "teal",
-          selected: false
-        },
-        {
-          name: "Pam",
-          color: "amber",
-          selected: false
-        }
-      ],
-      resources: []
+      users: [],
+      resources: [],
+      resourceNames: []
     };
+  },
+  mounted() {
+    UserService.getUsers(this.user.name)
+      .then(response => {
+        if (response.data) {
+          this.users = response.data;
+        } else {
+          this.$emit("notify", {
+            type: "error",
+            text: "No Users Found!"
+          });
+        }
+      })
+      .catch(error => {
+        this.$emit("notify", {
+          type: "error",
+          text: error.message
+        });
+      });
+    ResourceService.getResources()
+      .then(response => {
+        console.log(response.data);
+        if (response.data) {
+          this.resourceNames = response.data;
+        } else {
+          this.$emit("notify", {
+            type: "error",
+            text: "No Resources Found!"
+          });
+        }
+      })
+      .catch(error => {
+        this.$emit("notify", {
+          type: "error",
+          text: error.message
+        });
+      });
   },
   computed: {
     show: {
@@ -213,6 +251,22 @@ export default {
           this.$emit("close");
         }
       }
+    },
+    calendarUsers() {
+      let colors = ["pink", "amber", "indigo", "blue", "purple", "red"];
+      let userMap = [];
+      for (const key in this.users) {
+        if (this.users.hasOwnProperty(key)) {
+          userMap[key] = {};
+          userMap[key]["name"] = this.users[key];
+          userMap[key]["color"] = colors[key];
+          userMap[key]["selected"] = false;
+        }
+      }
+      return userMap;
+    },
+    calResources() {
+      return this.resources;
     }
   },
   methods: {
@@ -224,7 +278,11 @@ export default {
       this.resources.splice(this.resources.length - 1, 1);
     },
     inviteUser(user) {
-      this.$refs.sharedCalendar.addCalUser(user.name, user.color);
+      if (user.selected) {
+        this.$refs.sharedCalendar.addCalUser(user.name, user.color);
+      } else {
+        this.$refs.sharedCalendar.removeCalUser(user.name);
+      }
     }
   }
 };

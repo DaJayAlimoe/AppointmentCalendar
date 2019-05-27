@@ -12,5 +12,8 @@ const apiClient = axios.create({
 export default {
   login(username, password) {
     return apiClient.get("/login?name=" + username + "&password=" + password);
+  },
+  getUsers(username) {
+    return apiClient.get(`/without/${username}`);
   }
 };

@@ -12,7 +12,7 @@
                 :key="event.title"
                 class="my-event"
                 :style="{
-                  color: getuserColor(event.owner)
+                  backgroundColor: getuserColor(event.for)
                 }"
                 @click="open(event)"
                 v-html="event.title"
@@ -58,7 +58,7 @@
 </template>
 
 <script>
-// import MeetingService from "@/services/MeetingService.js";
+import MeetingService from "@/services/MeetingService.js";
 export default {
   name: "Calendar",
   props: ["user"],
@@ -76,7 +76,14 @@ export default {
     // convert the list of events into a map of lists keyed by date
     eventsMap() {
       const map = {};
-      this.events.forEach(e => (map[e.date] = map[e.date] || []).push(e));
+      for (const key in this.events) {
+        if (this.events.hasOwnProperty(key)) {
+          if (!Array.isArray(map[this.events[key].date])) {
+            map[this.events[key].date] = [];
+          }
+          map[this.events[key].date].push(this.events[key]);
+        }
+      }
       return map;
     }
   },
@@ -99,49 +106,44 @@ export default {
       );
     },
     addCalUser(username, color) {
-      console.log("adding : " + username);
+      console.log("adding user: " + username);
+      console.log("adding user color: " + color);
       this.userColor[username] = color;
-      this.events.concat([
-        {
-          owner: username,
-          title: "Weekly Meeting",
-          date: "2019-05-26",
-          time: "09:00",
-          duration: 45,
-          attendees: []
-        },
-        {
-          owner: username,
-          title: "Thomas' Birthday",
-          date: "2019-05-27"
-        },
-        {
-          owner: username,
-          title: "Mash Potatoes",
-          date: "2019-05-28",
-          time: "12:30",
-          duration: 180
+      MeetingService.getUserEvents(username)
+        .then(response => {
+          if (response.data) {
+            for (const key in response.data) {
+              if (response.data.hasOwnProperty(key)) {
+                let eventData = response.data[key];
+                eventData["for"] = username;
+                this.events.push(eventData);
+              }
+            }
+          } else {
+            this.$emit("notify", {
+              type: "info",
+              text: `No events found for user ${username}`
+            });
+          }
+        })
+        .catch(error => {
+          this.$emit("notify", {
+            type: "error",
+            text: error.message
+          });
+        });
+    },
+    removeCalUser(username) {
+      console.log("removing user: " + username);
+      console.log("removing user color: " + this.userColor[username]);
+      delete this.userColor[username];
+      for (const key in this.events) {
+        if (this.events.hasOwnProperty(key)) {
+          if (this.events[key]["for"] == username) {
+            delete this.events[key];
+          }
         }
-      ]);
-      // MeetingService.getUserEvents(username)
-      //   .then(response => {
-      //     if (response.data) {
-      //       this.users[username]["color"] =
-      //         "#" + ((Math.random() * 0xffffff) << 0).toString(16);
-      //       this.events.concat(response.data);
-      //     } else {
-      //       this.$emit("notify", {
-      //         type: "info",
-      //         text: `No events found for user ${username}`
-      //       });
-      //     }
-      //   })
-      //   .catch(error => {
-      //     this.$emit("notify", {
-      //       type: "error",
-      //       text: error.message
-      //     });
-      //   });
+      }
     },
     getuserColor(username) {
       return this.userColor[username];

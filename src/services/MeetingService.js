@@ -16,5 +16,9 @@ export default {
   },
   createMeeting(meeting) {
     return apiClient.post(`/meeting/`, meeting);
+  },
+  getResourceEvents(resource, date) {
+    return apiClient.get(`/meeting/res/${resource}/${date}`);
+    // return apiClient.get("/appointment?name=" + username + "&password=" + password);
   }
 };
