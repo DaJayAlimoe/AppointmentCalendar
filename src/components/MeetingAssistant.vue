@@ -240,7 +240,6 @@ export default {
       });
     ResourceService.getResources()
       .then(response => {
-        console.log(response.data);
         if (response.data) {
           this.resourceNames = response.data;
         } else {
@@ -339,7 +338,6 @@ export default {
       Object.keys(this.selectedResources).forEach(id => {
         eventObject.ressourcen[id] = this.selectedResources[id];
       });
-      console.log(eventObject);
       MeetingService.createMeeting(eventObject)
         .then(response => {
           if (response.data) {
