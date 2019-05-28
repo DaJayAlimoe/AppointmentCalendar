@@ -72,9 +72,13 @@ export default {
             } else {
               this.$emit("notify", {
                 type: "info",
+<<<<<<< HEAD
                 text: `No Events found on ${
                   this.date
                 } for the selected Resource!`
+=======
+                text: `No Events found on ${this.date} for ${selectedResource}`
+>>>>>>> dev
               });
             }
           })
