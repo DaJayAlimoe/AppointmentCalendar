@@ -120,7 +120,11 @@
           <v-layout row wrap>
             <v-flex xs10 left>
               <v-card>
-                <Calendar :user="this.user" ref="sharedCalendar" />
+                <Calendar
+                  :user="this.user"
+                  ref="sharedCalendar"
+                  @notify="notify"
+                />
               </v-card>
             </v-flex>
             <v-flex xs2>
@@ -165,12 +169,15 @@
             </v-flex>
           </v-layout>
           <v-layout row wrap>
-            <template v-for="resource in calResources">
+            <template v-for="(resource, index) in calResources">
               <component
+                :id="index"
                 :resources="resourceNames"
                 :date="date"
                 :is="resource"
                 :key="resource.name"
+                @notify="notify"
+                @selectChange="resourceSelected"
               ></component>
             </template>
           </v-layout>
@@ -208,8 +215,9 @@ export default {
       },
       attendees: [],
       users: [],
+      resourceNames: [],
       resources: [],
-      resourceNames: []
+      selectedResources: {}
     };
   },
   mounted() {
@@ -261,7 +269,6 @@ export default {
       }
     },
     calendarUsers() {
-      // let colors = ["pink", "amber", "indigo", "blue", "purple", "red"];
       let userMap = [];
       let o = Math.round;
       let r = Math.random;
@@ -290,12 +297,21 @@ export default {
     }
   },
   methods: {
+    resourceSelected(resourceData) {
+      this.selectedResources[resourceData.id] = resourceData.selected;
+    },
+    notify(notification) {
+      this.$emit("notify", notification);
+    },
     addResource(name) {
       this.resources.push(Resource);
       this.$emit("invitation", name);
     },
     removeResource() {
       this.resources.splice(this.resources.length - 1, 1);
+      if (this.selectedResources[this.resources.length - 1]) {
+        delete this.selectedResources[this.resources.length - 1];
+      }
     },
     inviteUser(user) {
       if (user.selected) {
@@ -320,9 +336,8 @@ export default {
       this.attendees.forEach((attendee, index) => {
         eventObject.attendees[index] = { name: attendee, status: 0 };
       });
-      this.resources.forEach((resource, index) => {
-        console.log(resource.data.selected);
-        // eventObject.ressourcen[index] = resource.getSelectedResource();
+      Object.keys(this.selectedResources).forEach(id => {
+        eventObject.ressourcen[id] = this.selectedResources[id];
       });
       console.log(eventObject);
       MeetingService.createMeeting(eventObject)

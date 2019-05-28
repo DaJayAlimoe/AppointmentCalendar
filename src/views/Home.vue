@@ -14,6 +14,7 @@
             :visible="dialog"
             @close="dialog = false"
             :user="this.user"
+            @notify="notify"
           />
         </v-flex>
         <v-spacer></v-spacer>
@@ -26,7 +27,7 @@
       <v-spacer></v-spacer>
       <v-layout align-center justify-space-around row>
         <v-flex xs12>
-          <Calendar :user="this.user" />
+          <Calendar :user="this.user" @notify="notify" />
         </v-flex>
       </v-layout>
     </v-container>
@@ -52,6 +53,9 @@ export default {
     logout() {
       this.$emit("logout");
       this.$router.replace({ name: "login" });
+    },
+    notify(notification) {
+      this.$emit("notify", notification);
     }
   }
 };

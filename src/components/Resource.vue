@@ -12,8 +12,8 @@
           ></v-select>
         </v-card-title>
       </v-card>
-      <v-card-text class="py-0">
-        <template v-if="show">
+      <template v-if="show">
+        <v-card-text class="py-0">
           <v-timeline align-top dense>
             <template v-for="event in resourceEvents">
               <v-timeline-item color="warning" small :key="event.time">
@@ -29,15 +29,15 @@
               </v-timeline-item>
             </template>
           </v-timeline>
-        </template>
-      </v-card-text>
+        </v-card-text>
+      </template>
     </v-card>
   </v-flex>
 </template>
 <script>
 import MeetingService from "@/services/MeetingService.js";
 export default {
-  props: ["resources", "date"],
+  props: ["resources", "date", "id"],
   data() {
     return {
       show: false,
@@ -66,7 +66,7 @@ export default {
         this.show = false;
         MeetingService.getResourceEvents(selectedResource, this.date)
           .then(response => {
-            if (response.data) {
+            if (response.data != undefined && response.data.length != 0) {
               this.events = response.data;
               this.show = true;
             } else {
@@ -82,6 +82,10 @@ export default {
               text: error.message
             });
           });
+        this.$emit("selectChange", {
+          id: this.id,
+          selected: selectedResource
+        });
       }
     },
     getSelectedResource() {
