@@ -24,7 +24,7 @@
                 v-model="title"
                 type="text"
                 label="Event Title"
-                required
+                :rules="[rules.required]"
               ></v-text-field>
             </v-flex>
           </v-layout>
@@ -47,7 +47,7 @@
                     v-model="date"
                     label="Date"
                     readonly
-                    required
+                    :rules="[rules.required]"
                     v-on="on"
                   ></v-text-field>
                 </template>
@@ -79,7 +79,7 @@
                   <v-text-field
                     v-model="time"
                     label="Start Time"
-                    required
+                    :rules="[rules.required]"
                     readonly
                     v-on="on"
                   ></v-text-field>
@@ -211,7 +211,8 @@ export default {
       duration: null,
       rules: {
         daylimit: value =>
-          value <= 24 || "Duration cannot be longer than 24 hours"
+          value <= 24 || "Duration cannot be longer than 24 hours",
+        required: value => value != null || "Field cannot be empty"
       },
       attendees: [],
       users: [],
