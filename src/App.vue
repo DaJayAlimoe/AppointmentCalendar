@@ -77,9 +77,13 @@ export default {
     },
     notify(snackbar) {
       this.snackbar.type = snackbar.type ? snackbar.type : this.snackbar.type;
-      this.snackbar.timeout = snackbar.timeout
-        ? snackbar.timeout
-        : this.snackbar.timeout;
+      if (this.snackbar.type === "info") {
+        this.snackbar.timeout = 3000;
+      } else {
+        this.snackbar.timeout = snackbar.timeout
+          ? snackbar.timeout
+          : this.snackbar.timeout;
+      }
       this.snackbar.text = snackbar.text ? snackbar.text : this.snackbar.text;
       this.snackbar.state = true;
     }

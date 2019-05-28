@@ -18,20 +18,43 @@
           />
         </v-flex>
         <v-spacer></v-spacer>
-
-        <v-layout row justify-space-between>
-          <v-badge right v-model="show" color="purple">
-            <template v-slot:badge>
-              <span>6</span>
+        <v-flex sm4 xs12 class="text-sm-right text-xs-center">
+          <v-menu
+            offset-y
+            content-class="dropdown-menu"
+            transition="slide-y-transition"
+          >
+            <template v-slot:activator="{ on }">
+              <v-badge color="primary" right overlap>
+                <template v-if="hasNotifications()" v-slot:badge>
+                  <span>{{ getNotificationsCount() }}</span>
+                </template>
+                <span>{{ user.name }}</span>
+                <v-icon :color="getColor()" large v-on="on"
+                  >account_circle</v-icon
+                >
+              </v-badge>
             </template>
-            <v-icon large color="grey">mail</v-icon>
-          </v-badge>
-          <v-flex sm4 xs4 class="text-sm-right text-xs-center">
-            <v-btn id="user_logout" dark small color="secondary" @click="logout"
-              >logout</v-btn
-            >
-          </v-flex>
-        </v-layout>
+            <v-card>
+              <v-list dense>
+                <v-list-tile
+                  v-for="notification in notifications"
+                  :key="notification"
+                >
+                  <v-list-tile-title v-text="notification" />
+                </v-list-tile>
+                <v-list-tile color="secondary" @click="logout">
+                  <v-list-tile-title>
+                    <v-flex xs12>
+                      Logout
+                      <v-icon color="grey">user_logout</v-icon>
+                    </v-flex>
+                  </v-list-tile-title>
+                </v-list-tile>
+              </v-list>
+            </v-card>
+          </v-menu>
+        </v-flex>
       </v-layout>
       <v-spacer></v-spacer>
       <v-layout align-center justify-space-around row>
@@ -51,7 +74,14 @@ export default {
   props: ["user"],
   data() {
     return {
-      dialog: false
+      dialog: false,
+      notifications: [
+        "Mike, John responded to your email",
+        "You have 5 new tasks",
+        "You're now a friend with Andrew",
+        "Another Notification",
+        "Another One"
+      ]
     };
   },
   components: {
@@ -65,6 +95,15 @@ export default {
     },
     notify(notification) {
       this.$emit("notify", notification);
+    },
+    getColor() {
+      return this.user !== null ? this.user.color : "grey lighten-1";
+    },
+    hasNotifications() {
+      return this.notifications.length >= 1;
+    },
+    getNotificationsCount() {
+      return this.notifications.length;
     }
   }
 };
