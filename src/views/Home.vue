@@ -18,11 +18,20 @@
           />
         </v-flex>
         <v-spacer></v-spacer>
-        <v-flex sm4 xs12 class="text-sm-right text-xs-center">
-          <v-btn id="user_logout" dark small color="secondary" @click="logout"
-            >logout</v-btn
-          >
-        </v-flex>
+
+        <v-layout row justify-space-between>
+          <v-badge right v-model="show" color="purple">
+            <template v-slot:badge>
+              <span>6</span>
+            </template>
+            <v-icon large color="grey">mail</v-icon>
+          </v-badge>
+          <v-flex sm4 xs4 class="text-sm-right text-xs-center">
+            <v-btn id="user_logout" dark small color="secondary" @click="logout"
+              >logout</v-btn
+            >
+          </v-flex>
+        </v-layout>
       </v-layout>
       <v-spacer></v-spacer>
       <v-layout align-center justify-space-around row>
