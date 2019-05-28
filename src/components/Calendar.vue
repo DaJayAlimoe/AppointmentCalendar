@@ -13,7 +13,7 @@
                 class="my-event"
                 :style="{ backgroundColor: getuserColor(event.for) }"
                 @click="open(event)"
-                v-html="event.title"
+                v-html="getEventTitle(event)"
               ></div>
             </template>
           </template>
@@ -31,7 +31,7 @@
                 }"
                 class="my-event with-time"
                 @click="open(event)"
-                v-html="event.title"
+                v-html="getEventTitle(event)"
               ></div>
             </template>
           </template>
@@ -163,6 +163,9 @@ export default {
     },
     trim(str) {
       return str.replace(/^\s+|\s+$/gm, "");
+    },
+    getEventTitle(event) {
+      return event.for === this.user.name ? event.title : "";
     }
   }
 };
