@@ -132,8 +132,6 @@ export default {
         });
     },
     removeCalUser(username) {
-      console.log("removing user: " + username);
-      console.log("removing user color: " + this.userColor[username]);
       let newEvents = [];
       delete this.userColor[username];
       for (const key in this.events) {
