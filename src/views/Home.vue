@@ -38,8 +38,8 @@
             <v-card>
               <v-list dense>
                 <v-list-tile
-                  v-for="notification in notifications"
-                  :key="notification"
+                  v-for="(notification, index) in notifications"
+                  :key="index"
                 >
                   <v-list-tile-title v-text="notification" />
                 </v-list-tile>
@@ -69,6 +69,7 @@
 <script>
 import Calendar from "@/components/Calendar.vue";
 import MeetingAssistant from "@/components/MeetingAssistant.vue";
+import NotificationService from "@/services/NotificationService.js";
 export default {
   name: "Home",
   props: ["user"],
@@ -81,8 +82,12 @@ export default {
         "You're now a friend with Andrew",
         "Another Notification",
         "Another One"
-      ]
+      ],
+      timer: null
     };
+  },
+  created: function() {
+    this.timer = setInterval(this.fetchNotifications(), 600000);
   },
   components: {
     Calendar,
@@ -104,7 +109,27 @@ export default {
     },
     getNotificationsCount() {
       return this.notifications.length;
+    },
+    fetchNotifications() {
+      NotificationService.getUserNotifications(this.user.name)
+        .then(response => {
+          if (response.data) {
+            this.notifications = response.data;
+          }
+        })
+        .catch(error => {
+          this.$emit("notify", {
+            type: "error",
+            text: error.message
+          });
+        });
+    },
+    cancelAutoUpdate: function() {
+      clearInterval(this.timer);
     }
+  },
+  beforeDestroy() {
+    clearInterval(this.timer);
   }
 };
 </script>
