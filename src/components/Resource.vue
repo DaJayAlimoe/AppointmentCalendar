@@ -86,10 +86,13 @@ export default {
           id: this.id,
           selected: selectedResource
         });
+      } else {
+        this.$emit("notify", {
+          type: "info",
+          text: `Please select a date to check the availability of the resourse`,
+          timeout: 4000
+        });
       }
-    },
-    getSelectedResource() {
-      return this.selected;
     }
   }
 };

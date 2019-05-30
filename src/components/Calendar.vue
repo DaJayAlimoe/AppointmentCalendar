@@ -56,6 +56,7 @@
 </template>
 
 <script>
+import EventBus from "@/event-bus.js";
 import MeetingService from "@/services/MeetingService.js";
 export default {
   name: "Calendar",
@@ -70,6 +71,12 @@ export default {
     events: [],
     userColor: {}
   }),
+  created() {
+    EventBus.$on("eventCreated", () => {
+      this.removeCalUser(this.user.name);
+      this.addCalUser(this.user.name, this.user.color);
+    });
+  },
   computed: {
     // convert the list of events into a map of lists keyed by date
     eventsMap() {
@@ -91,19 +98,34 @@ export default {
   },
   methods: {
     open(event) {
-      alert(
-        "----------EVENT DETAILS----------\nTitle: " +
-          event.title +
-          "\nDate: " +
-          event.date +
-          "\nTime: " +
-          event.time +
-          "\nDuration: " +
-          event.duration +
-          " minutes" +
-          "\nUser : " +
-          event.for
-      );
+      if (event.owner === this.user.name) {
+        alert(
+          "----------EVENT DETAILS----------\nTitle: " +
+            event.title +
+            "\nDate: " +
+            event.date +
+            "\nTime: " +
+            event.time +
+            "\nDuration: " +
+            event.duration +
+            " minutes" +
+            "\nUser : " +
+            event.for
+        );
+      } else {
+        alert(
+          "----------EVENT DETAILS----------" +
+            "\nDate: " +
+            event.date +
+            "\nTime: " +
+            event.time +
+            "\nDuration: " +
+            event.duration +
+            " minutes" +
+            "\nUser : " +
+            event.for
+        );
+      }
     },
     addCalUser(username, color) {
       this.userColor[username] = color;

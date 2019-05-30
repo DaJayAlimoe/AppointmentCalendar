@@ -77,7 +77,7 @@ export default {
     },
     notify(snackbar) {
       this.snackbar.type = snackbar.type ? snackbar.type : this.snackbar.type;
-      if (this.snackbar.type === "info") {
+      if (this.snackbar.type === "info" && snackbar.timeout === undefined) {
         this.snackbar.timeout = 3000;
       } else {
         this.snackbar.timeout = snackbar.timeout

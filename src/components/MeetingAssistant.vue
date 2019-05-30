@@ -205,6 +205,7 @@
 </template>
 
 <script>
+import EventBus from "@/event-bus.js";
 import Calendar from "@/components/Calendar.vue";
 import Resource from "@/components/Resource.vue";
 import UserService from "@/services/UserService.js";
@@ -362,6 +363,7 @@ export default {
               text: "Meeting succesfully saved!"
             });
             this.show = false;
+            EventBus.$emit("eventCreated");
           } else {
             this.$emit("notify", {
               type: "error",

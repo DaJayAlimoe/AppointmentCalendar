@@ -30,7 +30,7 @@
                   <span>{{ getNotificationsCount() }}</span>
                 </template>
                 <span>{{ user.name }}</span>
-                <v-icon :color="getColor()" large v-on="on"
+                <v-icon :color="getUserColor()" x-large v-on="on"
                   >account_circle</v-icon
                 >
               </v-badge>
@@ -46,7 +46,7 @@
                 <v-list-tile color="secondary" @click="logout">
                   <v-list-tile-title>
                     <v-flex xs12>
-                      Logout
+                      <b>Logout</b>
                       <v-icon color="grey">user_logout</v-icon>
                     </v-flex>
                   </v-list-tile-title>
@@ -96,7 +96,7 @@ export default {
     notify(notification) {
       this.$emit("notify", notification);
     },
-    getColor() {
+    getUserColor() {
       return this.user !== null ? this.user.color : "grey lighten-1";
     },
     hasNotifications() {
