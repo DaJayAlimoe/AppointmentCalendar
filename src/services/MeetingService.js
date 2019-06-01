@@ -14,6 +14,10 @@ export default {
     return apiClient.get(`/meeting/${username}`);
     // return apiClient.get("/appointment?name=" + username + "&password=" + password);
   },
+  getEvent(id) {
+    return apiClient.get(`/meeting/${username}`);
+    // return apiClient.get("/appointment?name=" + username + "&password=" + password);
+  },
   createMeeting(meeting) {
     return apiClient.post(`/meeting/`, meeting);
   },

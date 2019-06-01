@@ -38,10 +38,12 @@
             <v-card>
               <v-list dense>
                 <v-list-tile
-                  v-for="notification in notifications"
-                  :key="notification"
+                  v-for="(notification, index) in notoficationData"
+                  :key="index"
                 >
-                  <v-list-tile-title v-text="notification" />
+                  <v-list-tile-title @click="showNotificationDetails()">{{
+                    notification
+                  }}</v-list-tile-title>
                 </v-list-tile>
                 <v-list-tile color="secondary" @click="logout">
                   <v-list-tile-title>
@@ -69,24 +71,55 @@
 <script>
 import Calendar from "@/components/Calendar.vue";
 import MeetingAssistant from "@/components/MeetingAssistant.vue";
+import NotificationService from "@/services/NotificationService.js";
+import MeetingService from "@/services/MeetingService.js";
 export default {
   name: "Home",
   props: ["user"],
   data() {
     return {
       dialog: false,
-      notifications: [
-        "Mike, John responded to your email",
-        "You have 5 new tasks",
-        "You're now a friend with Andrew",
-        "Another Notification",
-        "Another One"
-      ]
+      notifications: [],
+      notificationsMeetings: {},
+      timer: null
     };
   },
   components: {
     Calendar,
     MeetingAssistant
+  },
+  computed: {
+    notoficationData() {
+      return this.notifications.map(notification => {
+        switch (notification.notificationType) {
+          case 0:
+            return `${
+              notification.notificationSender
+            } invited you to a meeting`;
+
+          case 1:
+            return `${
+              notification.notificationSender
+            } accepted your meeting invitation`;
+
+          case 2:
+            return `${
+              notification.notificationSender
+            } declined your meeting invitation`;
+
+          case 3:
+            return `${
+              notification.notificationSender
+            } made changes to a meeting you are attending`;
+
+          case 4:
+            return `${notification.notificationSender} deleted a meeting`;
+
+          default:
+            return "";
+        }
+      });
+    }
   },
   methods: {
     logout() {
@@ -105,6 +138,18 @@ export default {
     getNotificationsCount() {
       return this.notifications.length;
     }
+  },
+  showNotificationDetails(notification) {
+    MeetingService.getEvent(notification.meetingID)
+      .then(response => {
+        response.data;
+      })
+      .catch(error => {
+        error;
+      });
+  },
+  beforeDestroy() {
+    clearInterval(this.timer);
   }
 };
 </script>
