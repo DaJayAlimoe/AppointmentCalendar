@@ -99,32 +99,9 @@ export default {
   methods: {
     open(event) {
       if (event.owner === this.user.name) {
-        alert(
-          "----------EVENT DETAILS----------\nTitle: " +
-            event.title +
-            "\nDate: " +
-            event.date +
-            "\nTime: " +
-            event.time +
-            "\nDuration: " +
-            event.duration +
-            " minutes" +
-            "\nUser : " +
-            event.for
-        );
+        EventBus.$emit("eventToEdit", event);
       } else {
-        alert(
-          "----------EVENT DETAILS----------" +
-            "\nDate: " +
-            event.date +
-            "\nTime: " +
-            event.time +
-            "\nDuration: " +
-            event.duration +
-            " minutes" +
-            "\nUser : " +
-            event.for
-        );
+        EventBus.$emit("eventToView", event);
       }
     },
     addCalUser(username, color) {

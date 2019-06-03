@@ -14,6 +14,6 @@ export default {
     return apiClient.get(`/notification/${username}`);
   },
   deleteNotification(id) {
-    return apiClient.get(`/notification/${id}`);
+    return apiClient.delete(`/notification/${id}`);
   }
 };

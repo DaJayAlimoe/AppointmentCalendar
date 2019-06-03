@@ -23,6 +23,13 @@
           </v-toolbar-title>
           <v-spacer></v-spacer>
           <v-toolbar-items>
+            <v-btn
+              v-if="this.id !== 0 && this.id !== null"
+              dark
+              flat
+              @click="deleteEvent(id)"
+              >Delete</v-btn
+            >
             <v-btn dark flat @click.stop="saveEvent()">Save</v-btn>
           </v-toolbar-items>
         </v-toolbar>
@@ -150,6 +157,7 @@
                   >
                     <v-list-tile-action>
                       <v-switch
+                        :id="user.name"
                         v-model="user.selected"
                         :color="user.color"
                         @change="inviteUser(user)"
@@ -219,6 +227,7 @@ export default {
   },
   data() {
     return {
+      id: 0,
       title: null,
       date: null,
       date_menu: false,
@@ -272,6 +281,27 @@ export default {
           text: error.message
         });
       });
+    EventBus.$on("eventToEdit", event => {
+      console.log(event);
+      this.id = event.id;
+      this.title = event.title;
+      this.date = event.date;
+      this.time = event.time;
+      this.duration = event.duration / 60;
+      // for (const key in event.attendees) {
+      //   if (event.attendees.hasOwnProperty(key)) {
+      //     const attendee = event.attendees[key];
+      //     var userSwitch = document.getElementById(attendee.name);
+      //     if ("createEvent" in document) {
+      //       var evt = document.createEvent("HTMLEvents");
+      //       evt.initEvent("change", false, true);
+      //       userSwitch.dispatchEvent(evt);
+      //     }
+      //   }
+      // }
+
+      this.$emit("eventEditTriggered");
+    });
   },
   computed: {
     show: {
@@ -340,7 +370,7 @@ export default {
     },
     saveEvent() {
       let eventObject = {
-        id: 0,
+        id: this.id,
         title: this.title,
         date: this.date,
         time: this.time,
@@ -363,11 +393,37 @@ export default {
               text: "Meeting succesfully saved!"
             });
             this.show = false;
+            this.id = 0;
+            this.title = null;
+            this.date = null;
+            this.time = null;
+            this.duration = null;
+            this.selectedResources = {};
+            this.attendees = [];
+
             EventBus.$emit("eventCreated");
           } else {
             this.$emit("notify", {
               type: "error",
               text: "Could not save Meeting. Try again!"
+            });
+          }
+        })
+        .catch(error => {
+          this.$emit("notify", {
+            type: "error",
+            text: error.message
+          });
+        });
+    },
+    deleteEvent(id) {
+      MeetingService.deleteMeeting(id)
+        .then(response => {
+          if (response.data) {
+            this.$emit("eventDeleted");
+            this.$emit("notify", {
+              type: "success",
+              text: "Meeting successfully Deleted!"
             });
           }
         })

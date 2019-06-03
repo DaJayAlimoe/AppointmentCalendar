@@ -30,5 +30,8 @@ export default {
   },
   declineMeeting(meetingID, username) {
     return apiClient.put(`/meeting/${meetingID}/${username}/no`);
+  },
+  deleteMeeting(id) {
+    return apiClient.delete(`/meeting/${id}`);
   }
 };

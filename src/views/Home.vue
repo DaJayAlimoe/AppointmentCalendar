@@ -12,6 +12,8 @@
           >
           <MeetingAssistant
             :visible="meetinAssistantDialog"
+            @eventEditTriggered="meetinAssistantDialog = true"
+            @eventDeleted="deletedEvent"
             @close="meetinAssistantDialog = false"
             :user="this.user"
             @notify="notify"
@@ -62,7 +64,7 @@
       <v-spacer></v-spacer>
       <v-layout align-center justify-space-around row>
         <v-flex xs12>
-          <Calendar :user="this.user" @notify="notify" />
+          <Calendar ref="calendar" :user="this.user" @notify="notify" />
         </v-flex>
 
         <v-dialog v-model="notifiocationDialog" max-width="290">
@@ -112,6 +114,7 @@
 </template>
 
 <script>
+import EventBus from "@/event-bus.js";
 import Calendar from "@/components/Calendar.vue";
 import MeetingAssistant from "@/components/MeetingAssistant.vue";
 import NotificationService from "@/services/NotificationService.js";
@@ -128,6 +131,12 @@ export default {
       notificationId: null,
       timer: null
     };
+  },
+  mounted() {
+    EventBus.$on("eventToView", event => {
+      this.notificationMeeting = event;
+      this.notifiocationDialog = true;
+    });
   },
   created: function() {
     this.timer = setInterval(this.fetchNotifications(), 600000);
@@ -263,28 +272,33 @@ export default {
         )
           .then(response => {
             if (response.data) {
-              NotificationService.deleteNotification(this.notificationId)
-                .then(response => {
-                  if (response.data) {
-                    this.notifications = this.notifications.filter(element => {
-                      return element.notificationID !== this.notificationId;
-                    });
+              if (this.notificationId) {
+                NotificationService.deleteNotification(this.notificationId)
+                  .then(response => {
+                    if (response.data) {
+                      this.notifications = this.notifications.filter(
+                        element => {
+                          return element.notificationID !== this.notificationId;
+                        }
+                      );
+                      this.$emit("notify", {
+                        type: "success",
+                        text: "Meeting accepted!",
+                        timeout: 30000
+                      });
+                      this.notifiocationDialog = false;
+                      this.notificationMeeting = null;
+                      this.notificationId = null;
+                    }
+                  })
+                  .catch(error => {
                     this.$emit("notify", {
-                      type: "success",
-                      text: "Meeting accepted!",
-                      timeout: 30000
+                      type: "error",
+                      text: error.message
                     });
-                    this.notifiocationDialog = false;
-                    this.notificationMeeting = null;
-                    this.notificationId = null;
-                  }
-                })
-                .catch(error => {
-                  this.$emit("notify", {
-                    type: "error",
-                    text: error.message
                   });
-                });
+              }
+              this.notifiocationDialog = false;
             } else {
               this.$emit("notify", {
                 type: "error",
@@ -292,6 +306,8 @@ export default {
                 timeout: 30000
               });
             }
+            this.$refs.calendar.removeCalUser(this.user.name);
+            this.$refs.calendar.addCalUser(this.user.name, this.user.color);
           })
           .catch(error => {
             this.$emit("notify", {
@@ -306,28 +322,33 @@ export default {
         )
           .then(response => {
             if (response.data) {
-              NotificationService.deleteNotification(this.notificationId)
-                .then(response => {
-                  if (response.data) {
-                    this.notifications = this.notifications.filter(element => {
-                      return element.notificationID !== this.notificationId;
-                    });
+              if (this.notificationId) {
+                NotificationService.deleteNotification(this.notificationId)
+                  .then(response => {
+                    if (response.data) {
+                      this.notifications = this.notifications.filter(
+                        element => {
+                          return element.notificationID !== this.notificationId;
+                        }
+                      );
+                      this.$emit("notify", {
+                        type: "success",
+                        text: "Meeting declined!",
+                        timeout: 30000
+                      });
+                      this.notifiocationDialog = false;
+                      this.notificationMeeting = null;
+                      this.notificationId = null;
+                    }
+                  })
+                  .catch(error => {
                     this.$emit("notify", {
-                      type: "success",
-                      text: "Meeting declined!",
-                      timeout: 30000
+                      type: "error",
+                      text: error.message
                     });
-                    this.notifiocationDialog = false;
-                    this.notificationMeeting = null;
-                    this.notificationId = null;
-                  }
-                })
-                .catch(error => {
-                  this.$emit("notify", {
-                    type: "error",
-                    text: error.message
                   });
-                });
+              }
+              this.notifiocationDialog = false;
             } else {
               this.$emit("notify", {
                 type: "error",
@@ -335,6 +356,8 @@ export default {
                 timeout: 30000
               });
             }
+            this.$refs.calendar.removeCalUser(this.user.name);
+            this.$refs.calendar.addCalUser(this.user.name, this.user.color);
           })
           .catch(error => {
             this.$emit("notify", {
@@ -343,6 +366,11 @@ export default {
             });
           });
       }
+    },
+    deletedEvent() {
+      this.meetinAssistantDialog = false;
+      this.$refs.calendar.removeCalUser(this.user.name);
+      this.$refs.calendar.addCalUser(this.user.name, this.user.color);
     },
     getNotificationMeetingText() {
       if (this.notificationMeeting) {
