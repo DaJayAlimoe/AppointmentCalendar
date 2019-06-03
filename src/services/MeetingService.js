@@ -14,11 +14,21 @@ export default {
     return apiClient.get(`/meeting/${username}`);
     // return apiClient.get("/appointment?name=" + username + "&password=" + password);
   },
+  getEvent(id) {
+    return apiClient.get(`/meeting/id/${id}`);
+    // return apiClient.get("/appointment?name=" + username + "&password=" + password);
+  },
   createMeeting(meeting) {
     return apiClient.post(`/meeting/`, meeting);
   },
   getResourceEvents(resource, date) {
     return apiClient.get(`/meeting/res/${resource}/${date}`);
     // return apiClient.get("/appointment?name=" + username + "&password=" + password);
+  },
+  acceptMeeting(meetingID, username) {
+    return apiClient.put(`/meeting/${meetingID}/${username}/yes`);
+  },
+  declineMeeting(meetingID, username) {
+    return apiClient.put(`/meeting/${meetingID}/${username}/no`);
   }
 };

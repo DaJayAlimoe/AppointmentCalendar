@@ -7,12 +7,12 @@
             id="create_appointment"
             small
             color="primary"
-            @click.stop="dialog = true"
+            @click.stop="meetinAssistantDialog = true"
             >Create</v-btn
           >
           <MeetingAssistant
-            :visible="dialog"
-            @close="dialog = false"
+            :visible="meetinAssistantDialog"
+            @close="meetinAssistantDialog = false"
             :user="this.user"
             @notify="notify"
           />
@@ -38,10 +38,13 @@
             <v-card>
               <v-list dense>
                 <v-list-tile
-                  v-for="(notification, index) in notifications"
+                  v-for="(notification, index) in notoficationData"
                   :key="index"
                 >
-                  <v-list-tile-title v-text="notification" />
+                  <v-list-tile-title
+                    @click="showNotificationDetails(notification)"
+                    >{{ notification.message }}</v-list-tile-title
+                  >
                 </v-list-tile>
                 <v-list-tile color="secondary" @click="logout">
                   <v-list-tile-title>
@@ -61,6 +64,48 @@
         <v-flex xs12>
           <Calendar :user="this.user" @notify="notify" />
         </v-flex>
+
+        <v-dialog v-model="notifiocationDialog" max-width="290">
+          <v-card v-if="this.notificationMeeting !== null">
+            <v-card-title class="headline">Meeting Details</v-card-title>
+
+            <v-card-text>
+              {{ "Title: " + this.notificationMeeting.title }}
+            </v-card-text>
+            <v-card-text>{{
+              "Date: " + this.notificationMeeting.date
+            }}</v-card-text>
+            <v-card-text>
+              {{ "Time: " + this.notificationMeeting.time }}
+            </v-card-text>
+            <v-card-text>
+              {{
+                "Duration: " + this.notificationMeeting.duration + " minutes"
+              }}
+            </v-card-text>
+            <v-card-text>
+              {{ "From : " + this.notificationMeeting.owner }}
+            </v-card-text>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+
+              <v-btn
+                color="green darken-1"
+                flat="flat"
+                @click="closeNotifiocationDialog(false)"
+                >Decline</v-btn
+              >
+
+              <v-btn
+                color="green darken-1"
+                flat="flat"
+                @click="closeNotifiocationDialog(true)"
+                >Accept</v-btn
+              >
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </v-layout>
     </v-container>
   </v-container>
@@ -70,19 +115,17 @@
 import Calendar from "@/components/Calendar.vue";
 import MeetingAssistant from "@/components/MeetingAssistant.vue";
 import NotificationService from "@/services/NotificationService.js";
+import MeetingService from "@/services/MeetingService.js";
 export default {
   name: "Home",
   props: ["user"],
   data() {
     return {
-      dialog: false,
-      notifications: [
-        "Mike, John responded to your email",
-        "You have 5 new tasks",
-        "You're now a friend with Andrew",
-        "Another Notification",
-        "Another One"
-      ],
+      notificationMeeting: null,
+      meetinAssistantDialog: false,
+      notifiocationDialog: false,
+      notifications: [],
+      notificationId: null,
       timer: null
     };
   },
@@ -92,6 +135,54 @@ export default {
   components: {
     Calendar,
     MeetingAssistant
+  },
+  computed: {
+    notoficationData() {
+      return this.notifications.map(notification => {
+        let data = {
+          ...notification,
+          ...{
+            message: ""
+          }
+        };
+        switch (notification.notificationType) {
+          case 0:
+            data.message = `${
+              notification.notificationSender
+            } invited you to a meeting`;
+            break;
+
+          case 1:
+            data.message = `${
+              notification.notificationSender
+            } accepted your meeting invitation`;
+            break;
+
+          case 2:
+            data.message = `${
+              notification.notificationSender
+            } declined your meeting invitation`;
+            break;
+
+          case 3:
+            data.message = `${
+              notification.notificationSender
+            } made changes to a meeting you are attending`;
+            break;
+
+          case 4:
+            data.message = `${
+              notification.notificationSender
+            } deleted a meeting`;
+            break;
+
+          default:
+            data.message = "";
+            break;
+        }
+        return data;
+      });
+    }
   },
   methods: {
     logout() {
@@ -126,6 +217,151 @@ export default {
     },
     cancelAutoUpdate: function() {
       clearInterval(this.timer);
+    },
+    showNotificationDetails(notification) {
+      if (
+        1 === notification.notificationType ||
+        2 === notification.notificationType ||
+        4 === notification.notificationType
+      ) {
+        NotificationService.deleteNotification(notification.notificationID)
+          .then(response => {
+            if (response.data) {
+              this.notifications = this.notifications.filter(element => {
+                return element.notificationID !== notification.notificationID;
+              });
+            }
+          })
+          .catch(error => {
+            this.$emit("notify", {
+              type: "error",
+              text: error.message
+            });
+          });
+      } else {
+        MeetingService.getEvent(notification.meetingID)
+          .then(response => {
+            if (response.data) {
+              this.notificationMeeting = response.data;
+              this.notificationId = notification.notificationID;
+              this.notifiocationDialog = true;
+            }
+          })
+          .catch(error => {
+            this.$emit("notify", {
+              type: "error",
+              text: error.message
+            });
+          });
+      }
+    },
+    closeNotifiocationDialog(agreed) {
+      if (agreed) {
+        MeetingService.acceptMeeting(
+          this.notificationMeeting.id,
+          this.user.name
+        )
+          .then(response => {
+            if (response.data) {
+              NotificationService.deleteNotification(this.notificationId)
+                .then(response => {
+                  if (response.data) {
+                    this.notifications = this.notifications.filter(element => {
+                      return element.notificationID !== this.notificationId;
+                    });
+                    this.$emit("notify", {
+                      type: "success",
+                      text: "Meeting accepted!",
+                      timeout: 30000
+                    });
+                    this.notifiocationDialog = false;
+                    this.notificationMeeting = null;
+                    this.notificationId = null;
+                  }
+                })
+                .catch(error => {
+                  this.$emit("notify", {
+                    type: "error",
+                    text: error.message
+                  });
+                });
+            } else {
+              this.$emit("notify", {
+                type: "error",
+                text: "Meeting couldn't be saved!",
+                timeout: 30000
+              });
+            }
+          })
+          .catch(error => {
+            this.$emit("notify", {
+              type: "error",
+              text: error.message
+            });
+          });
+      } else {
+        MeetingService.declineMeeting(
+          this.notificationMeeting.id,
+          this.user.name
+        )
+          .then(response => {
+            if (response.data) {
+              NotificationService.deleteNotification(this.notificationId)
+                .then(response => {
+                  if (response.data) {
+                    this.notifications = this.notifications.filter(element => {
+                      return element.notificationID !== this.notificationId;
+                    });
+                    this.$emit("notify", {
+                      type: "success",
+                      text: "Meeting declined!",
+                      timeout: 30000
+                    });
+                    this.notifiocationDialog = false;
+                    this.notificationMeeting = null;
+                    this.notificationId = null;
+                  }
+                })
+                .catch(error => {
+                  this.$emit("notify", {
+                    type: "error",
+                    text: error.message
+                  });
+                });
+            } else {
+              this.$emit("notify", {
+                type: "error",
+                text: "Meeting couldn't be declined! Try again",
+                timeout: 30000
+              });
+            }
+          })
+          .catch(error => {
+            this.$emit("notify", {
+              type: "error",
+              text: error.message
+            });
+          });
+      }
+    },
+    getNotificationMeetingText() {
+      if (this.notificationMeeting) {
+        return (
+          "Title: " +
+          this.notificationMeeting.title +
+          "\nDate: " +
+          this.notificationMeeting.date +
+          "\nTime: " +
+          this.notificationMeeting.time +
+          "\nDuration: " +
+          this.notificationMeeting.duration +
+          " minutes" +
+          "\nFrom : " +
+          this.notificationMeeting.owner
+        );
+      } else {
+        return "";
+      }
     }
   },
   beforeDestroy() {

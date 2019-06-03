@@ -12,5 +12,8 @@ const apiClient = axios.create({
 export default {
   getUserNotifications(username) {
     return apiClient.get(`/notification/${username}`);
+  },
+  deleteNotification(id) {
+    return apiClient.get(`/notification/${id}`);
   }
 };
