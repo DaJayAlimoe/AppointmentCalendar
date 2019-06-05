@@ -10,7 +10,7 @@
                 name="username"
                 label="Username"
                 type="text"
-                v-model="user.username"
+                v-model="user.name"
               ></v-text-field>
               <v-text-field
                 prepend-icon="lock"
@@ -18,7 +18,7 @@
                 label="Password"
                 id="password"
                 type="password"
-                v-model="user.password"
+                v-model="password"
               ></v-text-field>
             </v-form>
           </v-card-text>
@@ -33,44 +33,30 @@
 </template>
 
 <script>
-import UserService from "@/services/UserService.js";
+import { mapState } from "vuex";
 export default {
   name: "Login",
   data() {
-    return {
-      user: {
-        username: null,
-        password: null,
-        authenticated: false
-      }
-    };
+    return { password: null };
+  },
+  computed: {
+    ...mapState(["user"])
   },
   methods: {
     onSubmit() {
-      // this.$emit("authenticated", {
-      //   name: "tester",
-      //   color: "#1867c0;",
-      //   authenticated: true
-      // });
-      if (
-        this.user.username &&
-        this.user.password &&
-        !this.user.authenticated
-      ) {
-        UserService.login(this.user.username, this.user.password)
+      if (this.user.name && this.password) {
+        this.$store
+          .dispatch("login", {
+            username: this.user.name,
+            password: this.password
+          })
           .then(response => {
-            if (response.data) {
-              this.$emit("authenticated", {
-                name: this.user.username,
-                authenticated: response.data
-              });
-              this.user.username = null;
-              this.user.password = null;
-            } else {
+            if (response) {
               this.$emit("notify", {
-                type: "error",
-                text: "Invalid Credentials try again!"
+                type: "success",
+                text: "Login Successful"
               });
+              this.$router.replace({ name: "home" });
             }
           })
           .catch(error => {
@@ -85,6 +71,36 @@ export default {
           text: "Username and Password Required"
         });
       }
+
+      //   // if (this.user.name && this.user.password && !this.user.authenticated) {
+      //   //   UserService.login(this.user.name, this.user.password)
+      //   //     .then(response => {
+      //   //       if (response.data) {
+      //   //         this.$emit("authenticated", {
+      //   //           name: this.user.name,
+      //   //           authenticated: response.data
+      //   //         });
+      //   //         this.user.name = null;
+      //   //         this.user.password = null;
+      //   //       } else {
+      //   //         this.$emit("notify", {
+      //   //           type: "error",
+      //   //           text: "Invalid Credentials try again!"
+      //   //         });
+      //   //       }
+      //   //     })
+      //   //     .catch(error => {
+      //   //       this.$emit("notify", {
+      //   //         type: "error",
+      //   //         text: error.message
+      //   //       });
+      //   //     });
+      //   // } else {
+      //   //   this.$emit("notify", {
+      //   //     type: "error",
+      //   //     text: "Username and Password Required"
+      //   //   });
+      //   // }
     }
   }
 };

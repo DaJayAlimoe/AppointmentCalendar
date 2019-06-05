@@ -15,7 +15,7 @@
             @eventEditTriggered="meetinAssistantDialog = true"
             @eventDeleted="deletedEvent"
             @close="meetinAssistantDialog = false"
-            :user="this.user"
+            :user="user"
             @notify="notify"
           />
         </v-flex>
@@ -32,7 +32,7 @@
                   <span>{{ getNotificationsCount() }}</span>
                 </template>
                 <span>{{ user.name }}</span>
-                <v-icon :color="getUserColor()" x-large v-on="on"
+                <v-icon :color="user.hex_color" x-large v-on="on"
                   >account_circle</v-icon
                 >
               </v-badge>
@@ -117,11 +117,11 @@
 import EventBus from "@/event-bus.js";
 import Calendar from "@/components/Calendar.vue";
 import MeetingAssistant from "@/components/MeetingAssistant.vue";
+import { mapState } from "vuex";
 import NotificationService from "@/services/NotificationService.js";
 import MeetingService from "@/services/MeetingService.js";
 export default {
   name: "Home",
-  props: ["user"],
   data() {
     return {
       notificationMeeting: null,
@@ -146,6 +146,7 @@ export default {
     MeetingAssistant
   },
   computed: {
+    ...mapState(["user"]),
     notoficationData() {
       return this.notifications.map(notification => {
         let data = {

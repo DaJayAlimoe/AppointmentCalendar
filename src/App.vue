@@ -2,12 +2,7 @@
   <div id="app">
     <v-app id="inspire">
       <v-content>
-        <router-view
-          :user="user"
-          @authenticated="setUser"
-          @logout="logout"
-          @notify="notify"
-        />
+        <router-view @logout="logout" @notify="notify" />
         <v-snackbar
           v-model="snackbar.state"
           :color="snackbar.type"
@@ -24,6 +19,7 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
 export default {
   name: "App",
   data() {
@@ -33,47 +29,30 @@ export default {
         type: "info",
         timeout: 2000,
         text: ""
-      },
-      authenticated: false,
-      user: {
-        name: null,
-        color: null
       }
     };
   },
+  computed: {
+    ...mapState(["user"])
+  },
   mounted() {
-    if (!this.authenticated) {
+    if (!this.user.authenticated) {
       this.$router.replace({ name: "login" });
     }
   },
   methods: {
-    setUser(user) {
-      let o = Math.round;
-      let r = Math.random;
-      let s = 255;
-      if (user.authenticated) {
-        this.authenticated = user.authenticated;
-        this.user.name = user.name;
-        this.user.color =
-          "rgba(" +
-          o(r() * s) +
-          "," +
-          o(r() * s) +
-          "," +
-          o(r() * s) +
-          "," +
-          1 +
-          ")";
-        this.notify({ type: "success", text: "Login Successful" });
-        this.$router.replace({ name: "home" });
-      } else {
-        this.notify({ type: "error", text: "Login Failed" });
-      }
-    },
     logout() {
-      this.notify({ type: "success", text: "Logout Successful" });
-      this.authenticated = false;
-      this.user.name = null;
+      this.$store
+        .dispatch("logout")
+        .then(() => {
+          this.notify({ type: "success", text: "Logout Successful" });
+        })
+        .catch(error => {
+          this.$emit("notify", {
+            type: "error",
+            text: error.message
+          });
+        });
     },
     notify(snackbar) {
       this.snackbar.type = snackbar.type ? snackbar.type : this.snackbar.type;
