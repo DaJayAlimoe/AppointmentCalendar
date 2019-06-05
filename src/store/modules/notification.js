@@ -123,31 +123,27 @@ export default {
     },
     acceptNotificationEvent({ getters, rootGetters, dispatch }) {
       return MeetingService.acceptMeeting(
-        getters.selected_notification.id,
+        getters.selected_notification.meetingID,
         rootGetters.name
       ).then(response => {
         if (response.data) {
-          return dispatch(
-            "hideNotificationEvent",
-            getters.selected_notification
-          );
+          dispatch("hideNotificationEvent", getters.selected_notification);
+          return true;
         } else {
-          return response.data;
+          return false;
         }
       });
     },
     declineNotificationEvent({ getters, rootGetters, dispatch }) {
       return MeetingService.declineMeeting(
-        getters.selected_notification.id,
+        getters.selected_notification.meetingID,
         rootGetters.name
       ).then(response => {
         if (response.data) {
-          return dispatch(
-            "hideNotificationEvent",
-            getters.selected_notification
-          );
+          dispatch("hideNotificationEvent", getters.selected_notification);
+          return true;
         } else {
-          return response.data;
+          return false;
         }
       });
     }

@@ -118,6 +118,16 @@ import { mapState } from "vuex";
 import NotificationService from "@/services/NotificationService.js";
 export default {
   name: "Home",
+  data() {
+    return {
+      notificationMeeting: null,
+      meetinAssistantDialog: false,
+      notifiocationDialog: false,
+      notifications: [],
+      notificationId: null,
+      timer: null
+    };
+  },
   mounted() {
     EventBus.$on("eventToView", event => {
       this.notificationMeeting = event;
@@ -211,7 +221,7 @@ export default {
       this.$store
         .dispatch(action)
         .then(response => {
-          if (response.data) {
+          if (response) {
             this.$refs.calendar.removeCalUser(this.user.name);
             this.$refs.calendar.addCalUser(
               this.user.name,
