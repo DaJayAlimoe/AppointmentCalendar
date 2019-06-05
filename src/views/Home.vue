@@ -28,8 +28,11 @@
           >
             <template v-slot:activator="{ on }">
               <v-badge color="primary" right overlap>
-                <template v-if="hasNotifications()" v-slot:badge>
-                  <span>{{ getNotificationsCount() }}</span>
+                <template
+                  v-if="notification.notifications.length > 0"
+                  v-slot:badge
+                >
+                  <span>{{ notification.notifications.length }}</span>
                 </template>
                 <span>{{ user.name }}</span>
                 <v-icon :color="user.hex_color" x-large v-on="on"
@@ -40,8 +43,8 @@
             <v-card>
               <v-list dense>
                 <v-list-tile
-                  v-for="(notification, index) in notoficationData"
-                  :key="index"
+                  v-for="notification in notification.notifications"
+                  :key="notification.notificationID"
                 >
                   <v-list-tile-title
                     @click="showNotificationDetails(notification)"
@@ -64,29 +67,23 @@
       <v-spacer></v-spacer>
       <v-layout align-center justify-space-around row>
         <v-flex xs12>
-          <Calendar ref="calendar" :user="this.user" @notify="notify" />
+          <Calendar ref="calendar" :user="user" @notify="notify" />
         </v-flex>
 
-        <v-dialog v-model="notifiocationDialog" max-width="290">
-          <v-card v-if="this.notificationMeeting !== null">
+        <v-dialog v-model="notification.dialog" max-width="290">
+          <v-card v-if="notification.event !== null">
             <v-card-title class="headline">Meeting Details</v-card-title>
 
             <v-card-text>
-              {{ "Title: " + this.notificationMeeting.title }}
+              {{ "Title: " + notification.event.title }}
             </v-card-text>
-            <v-card-text>{{
-              "Date: " + this.notificationMeeting.date
-            }}</v-card-text>
+            <v-card-text>{{ "Date: " + notification.event.date }}</v-card-text>
+            <v-card-text>{{ "Time: " + notification.event.time }}</v-card-text>
             <v-card-text>
-              {{ "Time: " + this.notificationMeeting.time }}
-            </v-card-text>
-            <v-card-text>
-              {{
-                "Duration: " + this.notificationMeeting.duration + " minutes"
-              }}
+              {{ "Duration: " + notification.event.duration + " minutes" }}
             </v-card-text>
             <v-card-text>
-              {{ "From : " + this.notificationMeeting.owner }}
+              {{ "From : " + notification.event.owner }}
             </v-card-text>
 
             <v-card-actions>
@@ -95,14 +92,14 @@
               <v-btn
                 color="green darken-1"
                 flat="flat"
-                @click="closeNotifiocationDialog(false)"
+                @click="closenotificationDialog(false)"
                 >Decline</v-btn
               >
 
               <v-btn
                 color="green darken-1"
                 flat="flat"
-                @click="closeNotifiocationDialog(true)"
+                @click="closenotificationDialog(true)"
                 >Accept</v-btn
               >
             </v-card-actions>
@@ -119,91 +116,44 @@ import Calendar from "@/components/Calendar.vue";
 import MeetingAssistant from "@/components/MeetingAssistant.vue";
 import { mapState } from "vuex";
 import NotificationService from "@/services/NotificationService.js";
-import MeetingService from "@/services/MeetingService.js";
 export default {
   name: "Home",
-  data() {
-    return {
-      notificationMeeting: null,
-      meetinAssistantDialog: false,
-      notifiocationDialog: false,
-      notifications: [],
-      notificationId: null,
-      timer: null
-    };
-  },
   mounted() {
     EventBus.$on("eventToView", event => {
       this.notificationMeeting = event;
-      this.notifiocationDialog = true;
+      this.notificationDialog = true;
     });
   },
   created: function() {
-    this.timer = setInterval(this.fetchNotifications(), 600000);
+    this.$store.dispatch("fetchNotifications", 600000).catch(error => {
+      this.$emit("notify", {
+        type: "error",
+        text: error.message
+      });
+    });
   },
   components: {
     Calendar,
     MeetingAssistant
   },
-  computed: {
-    ...mapState(["user"]),
-    notoficationData() {
-      return this.notifications.map(notification => {
-        let data = {
-          ...notification,
-          ...{
-            message: ""
-          }
-        };
-        switch (notification.notificationType) {
-          case 0:
-            data.message = `${
-              notification.notificationSender
-            } invited you to a meeting`;
-            break;
-
-          case 1:
-            data.message = `${
-              notification.notificationSender
-            } accepted your meeting invitation`;
-            break;
-
-          case 2:
-            data.message = `${
-              notification.notificationSender
-            } declined your meeting invitation`;
-            break;
-
-          case 3:
-            data.message = `${
-              notification.notificationSender
-            } made changes to a meeting you are attending`;
-            break;
-
-          case 4:
-            data.message = `${
-              notification.notificationSender
-            } deleted a meeting`;
-            break;
-
-          default:
-            data.message = "";
-            break;
-        }
-        return data;
-      });
-    }
-  },
+  computed: mapState(["user", "notification"]),
   methods: {
     logout() {
-      this.$emit("logout");
-      this.$router.replace({ name: "login" });
+      this.$store
+        .dispatch("logout")
+        .then(() => {
+          this.$router.replace({ name: "login" });
+          this.notify({ type: "success", text: "Logout Successful" });
+        })
+        .catch(error => {
+          this.$emit("notify", {
+            type: "error",
+            text: error.message
+          });
+        });
     },
     notify(notification) {
       this.$emit("notify", notification);
-    },
-    getUserColor() {
-      return this.user !== null ? this.user.color : "grey lighten-1";
     },
     hasNotifications() {
       return this.notifications.length >= 1;
@@ -229,19 +179,9 @@ export default {
       clearInterval(this.timer);
     },
     showNotificationDetails(notification) {
-      if (
-        1 === notification.notificationType ||
-        2 === notification.notificationType ||
-        4 === notification.notificationType
-      ) {
-        NotificationService.deleteNotification(notification.notificationID)
-          .then(response => {
-            if (response.data) {
-              this.notifications = this.notifications.filter(element => {
-                return element.notificationID !== notification.notificationID;
-              });
-            }
-          })
+      if ([1, 2, 4].includes(notification.notificationType)) {
+        this.$store
+          .dispatch("removeNotification", notification)
           .catch(error => {
             this.$emit("notify", {
               type: "error",
@@ -249,14 +189,8 @@ export default {
             });
           });
       } else {
-        MeetingService.getEvent(notification.meetingID)
-          .then(response => {
-            if (response.data) {
-              this.notificationMeeting = response.data;
-              this.notificationId = notification.notificationID;
-              this.notifiocationDialog = true;
-            }
-          })
+        this.$store
+          .dispatch("showNotificationEvent", notification)
           .catch(error => {
             this.$emit("notify", {
               type: "error",
@@ -265,108 +199,43 @@ export default {
           });
       }
     },
-    closeNotifiocationDialog(agreed) {
+    closenotificationDialog(agreed) {
+      let action = "declineNotificationEvent";
+      let successText = "Meeting declined!";
+      let errorText = "Meeting couldn't be declined! Try again";
       if (agreed) {
-        MeetingService.acceptMeeting(
-          this.notificationMeeting.id,
-          this.user.name
-        )
-          .then(response => {
-            if (response.data) {
-              if (this.notificationId) {
-                NotificationService.deleteNotification(this.notificationId)
-                  .then(response => {
-                    if (response.data) {
-                      this.notifications = this.notifications.filter(
-                        element => {
-                          return element.notificationID !== this.notificationId;
-                        }
-                      );
-                      this.$emit("notify", {
-                        type: "success",
-                        text: "Meeting accepted!",
-                        timeout: 30000
-                      });
-                      this.notifiocationDialog = false;
-                      this.notificationMeeting = null;
-                      this.notificationId = null;
-                    }
-                  })
-                  .catch(error => {
-                    this.$emit("notify", {
-                      type: "error",
-                      text: error.message
-                    });
-                  });
-              }
-              this.notifiocationDialog = false;
-            } else {
-              this.$emit("notify", {
-                type: "error",
-                text: "Meeting couldn't be saved!",
-                timeout: 30000
-              });
-            }
-            this.$refs.calendar.removeCalUser(this.user.name);
-            this.$refs.calendar.addCalUser(this.user.name, this.user.color);
-          })
-          .catch(error => {
-            this.$emit("notify", {
-              type: "error",
-              text: error.message
-            });
-          });
-      } else {
-        MeetingService.declineMeeting(
-          this.notificationMeeting.id,
-          this.user.name
-        )
-          .then(response => {
-            if (response.data) {
-              if (this.notificationId) {
-                NotificationService.deleteNotification(this.notificationId)
-                  .then(response => {
-                    if (response.data) {
-                      this.notifications = this.notifications.filter(
-                        element => {
-                          return element.notificationID !== this.notificationId;
-                        }
-                      );
-                      this.$emit("notify", {
-                        type: "success",
-                        text: "Meeting declined!",
-                        timeout: 30000
-                      });
-                      this.notifiocationDialog = false;
-                      this.notificationMeeting = null;
-                      this.notificationId = null;
-                    }
-                  })
-                  .catch(error => {
-                    this.$emit("notify", {
-                      type: "error",
-                      text: error.message
-                    });
-                  });
-              }
-              this.notifiocationDialog = false;
-            } else {
-              this.$emit("notify", {
-                type: "error",
-                text: "Meeting couldn't be declined! Try again",
-                timeout: 30000
-              });
-            }
-            this.$refs.calendar.removeCalUser(this.user.name);
-            this.$refs.calendar.addCalUser(this.user.name, this.user.color);
-          })
-          .catch(error => {
-            this.$emit("notify", {
-              type: "error",
-              text: error.message
-            });
-          });
+        action = "acceptNotificationEvent";
+        successText = "Meeting accepted!";
+        errorText = "Meeting couldn't be saved!";
       }
+      this.$store
+        .dispatch(action)
+        .then(response => {
+          if (response.data) {
+            this.$refs.calendar.removeCalUser(this.user.name);
+            this.$refs.calendar.addCalUser(
+              this.user.name,
+              this.user.rgba_color
+            );
+            this.$emit("notify", {
+              type: "success",
+              text: successText,
+              timeout: 30000
+            });
+          } else {
+            this.$emit("notify", {
+              type: "error",
+              text: errorText,
+              timeout: 30000
+            });
+          }
+        })
+        .catch(error => {
+          this.$emit("notify", {
+            type: "error",
+            text: error.message
+          });
+        });
     },
     deletedEvent() {
       this.meetinAssistantDialog = false;

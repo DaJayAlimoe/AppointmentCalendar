@@ -74,14 +74,14 @@ export default {
     }
   },
   actions: {
-    login({ commit }, { username, password }) {
-      return UserService.login(username, password).then(response => {
+    login({ commit, getters }, password) {
+      return UserService.login(getters.name, password).then(response => {
         if (response.data) {
           let rgba = getRandomRGBA();
           let hex = getHEX(rgba);
           commit("LOGIN", {
             auth: response.data,
-            name: username,
+            name: getters.name,
             rgba: rgba,
             hex: hex
           });

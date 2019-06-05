@@ -2,7 +2,7 @@
   <div id="app">
     <v-app id="inspire">
       <v-content>
-        <router-view @logout="logout" @notify="notify" />
+        <router-view @notify="notify" />
         <v-snackbar
           v-model="snackbar.state"
           :color="snackbar.type"
@@ -41,19 +41,6 @@ export default {
     }
   },
   methods: {
-    logout() {
-      this.$store
-        .dispatch("logout")
-        .then(() => {
-          this.notify({ type: "success", text: "Logout Successful" });
-        })
-        .catch(error => {
-          this.$emit("notify", {
-            type: "error",
-            text: error.message
-          });
-        });
-    },
     notify(snackbar) {
       this.snackbar.type = snackbar.type ? snackbar.type : this.snackbar.type;
       if (this.snackbar.type === "info" && snackbar.timeout === undefined) {
