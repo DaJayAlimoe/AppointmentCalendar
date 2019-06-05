@@ -52,11 +52,17 @@ export default {
           })
           .then(response => {
             if (response) {
+              this.password = null;
               this.$emit("notify", {
                 type: "success",
                 text: "Login Successful"
               });
               this.$router.replace({ name: "home" });
+            } else {
+              this.$emit("notify", {
+                type: "error",
+                text: "Invalid Credentials try again!"
+              });
             }
           })
           .catch(error => {
@@ -71,36 +77,6 @@ export default {
           text: "Username and Password Required"
         });
       }
-
-      //   // if (this.user.name && this.user.password && !this.user.authenticated) {
-      //   //   UserService.login(this.user.name, this.user.password)
-      //   //     .then(response => {
-      //   //       if (response.data) {
-      //   //         this.$emit("authenticated", {
-      //   //           name: this.user.name,
-      //   //           authenticated: response.data
-      //   //         });
-      //   //         this.user.name = null;
-      //   //         this.user.password = null;
-      //   //       } else {
-      //   //         this.$emit("notify", {
-      //   //           type: "error",
-      //   //           text: "Invalid Credentials try again!"
-      //   //         });
-      //   //       }
-      //   //     })
-      //   //     .catch(error => {
-      //   //       this.$emit("notify", {
-      //   //         type: "error",
-      //   //         text: error.message
-      //   //       });
-      //   //     });
-      //   // } else {
-      //   //   this.$emit("notify", {
-      //   //     type: "error",
-      //   //     text: "Username and Password Required"
-      //   //   });
-      //   // }
     }
   }
 };
