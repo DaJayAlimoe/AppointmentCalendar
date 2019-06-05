@@ -75,66 +75,39 @@ export default {
   },
   actions: {
     login({ commit }, { username, password }) {
-      return UserService.login(username, password)
-        .then(response => {
-          if (response.data) {
-            let rgba = getRandomRGBA();
-            let hex = getHEX(rgba);
-            commit("LOGIN", {
-              auth: response.data,
-              name: username,
-              rgba: rgba,
-              hex: hex
-            });
-            return true;
-          } else {
-            // this.$emit("notify", {
-            //   type: "error",
-            //   text: "Invalid Credentials try again!"
-            // });
-            return false;
-          }
-        })
-        .catch(error => {
-          error;
-          // this.$emit("notify", {
-          //   type: "error",
-          //   text: error.message
-          // });
-        });
+      return UserService.login(username, password).then(response => {
+        if (response.data) {
+          let rgba = getRandomRGBA();
+          let hex = getHEX(rgba);
+          commit("LOGIN", {
+            auth: response.data,
+            name: username,
+            rgba: rgba,
+            hex: hex
+          });
+        }
+        return response.data;
+      });
     },
     logout({ commit }) {
       commit("LOGOUT");
     },
     fetchUsers({ commit, getters }) {
-      UserService.getUsers(getters.name)
-        .then(response => {
-          if (response.data) {
-            let users = [];
-            let index = 0;
-            response.data.forEach(user => {
-              let rgba = this.getRandomRGBA();
-              users[index] = user;
-              users[index]["rgba_color"] = rgba;
-              users[index]["hex_color"] = this.getHEX(rgba);
-              users[index]["selected"] = false;
-              index++;
-            });
-            commit("SET_USERS", users);
-          } else {
-            // this.$emit("notify", {
-            //   type: "error",
-            //   text: "No Users Found!"
-            // });
-          }
-        })
-        .catch(error => {
-          error;
-          // this.$emit("notify", {
-          //   type: "error",
-          //   text: error.message
-          // });
-        });
+      UserService.getUsers(getters.name).then(response => {
+        if (response.data) {
+          let users = [];
+          let index = 0;
+          response.data.forEach(user => {
+            let rgba = getRandomRGBA();
+            users[index] = user;
+            users[index]["rgba_color"] = rgba;
+            users[index]["hex_color"] = getHEX(rgba);
+            users[index]["selected"] = false;
+            index++;
+          });
+          commit("SET_USERS", users);
+        }
+      });
     },
     selectUser({ commit, getters }, { name }) {
       let index = getters.users.findIndex(user => user.name === name);
