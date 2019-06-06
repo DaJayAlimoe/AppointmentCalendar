@@ -19,15 +19,15 @@
           </v-btn>
           <v-toolbar-title>
             Meeting Assistant
-            <v-avatar size="22px" :color="user.color"></v-avatar>
+            <v-avatar size="22px" :color="user.hex_color"></v-avatar>
           </v-toolbar-title>
           <v-spacer></v-spacer>
           <v-toolbar-items>
             <v-btn
-              v-if="this.id !== 0 && this.id !== null"
+              v-if="meeting.id !== 0"
               dark
               flat
-              @click="deleteEvent(id)"
+              @click="deleteEvent(meeting.id)"
               >Delete</v-btn
             >
             <v-btn dark flat @click.stop="saveEvent()">Save</v-btn>
@@ -42,10 +42,10 @@
             <v-layout row wrap>
               <v-flex xs12>
                 <v-text-field
-                  v-model="title"
+                  v-model="meeting.title"
                   type="text"
                   label="Event Title"
-                  :rules="[rules.required]"
+                  :rules="[meeting.rules.required]"
                 ></v-text-field>
               </v-flex>
             </v-layout>
@@ -53,10 +53,10 @@
               <v-flex xs4>
                 <v-menu
                   ref="menu1"
-                  v-model="date_menu"
+                  v-model="meeting.date_menu"
                   :close-on-content-click="false"
                   :nudge-right="40"
-                  :return-value.sync="date"
+                  :return-value.sync="meeting.date"
                   lazy
                   transition="scale-transition"
                   offset-y
@@ -65,19 +65,31 @@
                 >
                   <template v-slot:activator="{ on }">
                     <v-text-field
-                      v-model="date"
+                      v-model="meeting.date"
                       label="Date"
                       readonly
-                      :rules="[rules.required]"
+                      :rules="[meeting.rules.required]"
                       v-on="on"
                     ></v-text-field>
                   </template>
-                  <v-date-picker v-model="date" scrollable :landscape="true">
+                  <v-date-picker
+                    v-model="meeting.date"
+                    scrollable
+                    :landscape="true"
+                  >
                     <v-spacer></v-spacer>
-                    <v-btn flat color="primary" @click="date_menu = false"
+                    <v-btn
+                      flat
+                      color="primary"
+                      @click="
+                        this.$store.dispatch('toggleDateMenuVisibility', false)
+                      "
                       >Cancel</v-btn
                     >
-                    <v-btn flat color="primary" @click="$refs.menu1.save(date)"
+                    <v-btn
+                      flat
+                      color="primary"
+                      @click="$refs.menu1.save(meeting.date)"
                       >OK</v-btn
                     >
                   </v-date-picker>
@@ -86,10 +98,10 @@
               <v-flex xs4>
                 <v-menu
                   ref="menu2"
-                  v-model="time_menu"
+                  v-model="meeting.time_menu"
                   :close-on-content-click="false"
                   :nudge-right="40"
-                  :return-value.sync="time"
+                  :return-value.sync="meeting.time"
                   lazy
                   transition="scale-transition"
                   offset-y
@@ -98,24 +110,24 @@
                 >
                   <template v-slot:activator="{ on }">
                     <v-text-field
-                      v-model="time"
+                      v-model="meeting.time"
                       label="Start Time"
-                      :rules="[rules.required]"
+                      :rules="[meeting.rules.required]"
                       readonly
                       v-on="on"
                     ></v-text-field>
                   </template>
                   <v-time-picker
                     format="24hr"
-                    v-model="time"
+                    v-model="meeting.time"
                     full-width
-                    @click:minute="$refs.menu2.save(time)"
+                    @click:minute="$refs.menu2.save(meeting.time)"
                   ></v-time-picker>
                 </v-menu>
               </v-flex>
               <v-flex xs4>
                 <v-text-field
-                  v-model="duration"
+                  v-model="meeting.duration"
                   label="Duration"
                   suffix="hours"
                   type="number"
@@ -123,7 +135,7 @@
                   min="0.5"
                   max="24"
                   required
-                  :rules="[rules.daylimit]"
+                  :rules="[meeting.rules.daylimit]"
                 />
               </v-flex>
             </v-layout>
@@ -142,7 +154,7 @@
               <v-flex xs10 left>
                 <v-card>
                   <Calendar
-                    :user="this.user"
+                    :user="user"
                     ref="sharedCalendar"
                     @notify="notify"
                   />
@@ -152,14 +164,14 @@
                 <v-list two-line subheader>
                   <v-list-tile
                     avatar
-                    v-for="user in calendarUsers"
+                    v-for="user in user.users"
                     :key="user.name"
                   >
                     <v-list-tile-action>
                       <v-switch
                         :id="user.name"
                         v-model="user.selected"
-                        :color="user.color"
+                        :color="user.rgba_color"
                         @change="inviteUser(user)"
                       ></v-switch>
                     </v-list-tile-action>
@@ -216,6 +228,7 @@
 import EventBus from "@/event-bus.js";
 import Calendar from "@/components/Calendar.vue";
 import Resource from "@/components/Resource.vue";
+import { mapState } from "vuex";
 import UserService from "@/services/UserService.js";
 import ResourceService from "@/services/ResourceService.js";
 import MeetingService from "@/services/MeetingService.js";
@@ -303,45 +316,46 @@ export default {
       this.$emit("eventEditTriggered");
     });
   },
-  computed: {
-    show: {
-      get() {
-        return this.visible;
-      },
-      set(value) {
-        if (!value) {
-          this.$emit("close");
-        }
-      }
-    },
-    calendarUsers() {
-      let userMap = [];
-      let o = Math.round;
-      let r = Math.random;
-      let s = 255;
-      for (const key in this.users) {
-        if (this.users.hasOwnProperty(key)) {
-          userMap[key] = {};
-          userMap[key]["name"] = this.users[key];
-          userMap[key]["color"] =
-            "rgba(" +
-            o(r() * s) +
-            "," +
-            o(r() * s) +
-            "," +
-            o(r() * s) +
-            "," +
-            1 +
-            ")";
-          userMap[key]["selected"] = false;
-        }
-      }
-      return userMap;
-    },
-    calResources() {
-      return this.resources;
-    }
-  },
+  computed: mapState(["user", "meeting"]),
+  // {
+  //   show: {
+  //     get() {
+  //       return this.visible;
+  //     },
+  //     set(value) {
+  //       if (!value) {
+  //         this.$emit("close");
+  //       }
+  //     }
+  //   },
+  //   calendarUsers() {
+  //     let userMap = [];
+  //     let o = Math.round;
+  //     let r = Math.random;
+  //     let s = 255;
+  //     for (const key in this.users) {
+  //       if (this.users.hasOwnProperty(key)) {
+  //         userMap[key] = {};
+  //         userMap[key]["name"] = this.users[key];
+  //         userMap[key]["color"] =
+  //           "rgba(" +
+  //           o(r() * s) +
+  //           "," +
+  //           o(r() * s) +
+  //           "," +
+  //           o(r() * s) +
+  //           "," +
+  //           1 +
+  //           ")";
+  //         userMap[key]["selected"] = false;
+  //       }
+  //     }
+  //     return userMap;
+  //   },
+  //   calResources() {
+  //     return this.resources;
+  //   }
+  // },
   methods: {
     resourceSelected(resourceData) {
       this.selectedResources[resourceData.id] = resourceData.selected;

@@ -1,6 +1,7 @@
 import NotificationService from "@/services/NotificationService.js";
 import MeetingService from "@/services/MeetingService.js";
 export default {
+  namespaced: true,
   state: {
     dialog: false,
     selected_notification: {},
@@ -112,14 +113,10 @@ export default {
       });
     },
     hideNotificationEvent({ commit, dispatch }, notification) {
-      MeetingService.getEvent(notification.meetingID).then(response => {
-        if (response.data) {
-          commit("SET_NOTIFICATION_EVENT", {});
-          commit("SET_SELECTED_NOTIFICATION", {});
-          commit("SET_NOTIFICATION_DIALOG", false);
-          dispatch("removeNotification", notification);
-        }
-      });
+      commit("SET_NOTIFICATION_EVENT", {});
+      commit("SET_SELECTED_NOTIFICATION", {});
+      commit("SET_NOTIFICATION_DIALOG", false);
+      return dispatch("notification/removeNotification", notification);
     },
     acceptNotificationEvent({ getters, rootGetters, dispatch }) {
       return MeetingService.acceptMeeting(
@@ -127,8 +124,16 @@ export default {
         rootGetters.name
       ).then(response => {
         if (response.data) {
-          dispatch("hideNotificationEvent", getters.selected_notification);
-          return true;
+          dispatch(
+            "notification/hideNotificationEvent",
+            getters.selected_notification
+          )
+            .then(response => {
+              return response;
+            })
+            .catch(() => {
+              return false;
+            });
         } else {
           return false;
         }
@@ -140,8 +145,16 @@ export default {
         rootGetters.name
       ).then(response => {
         if (response.data) {
-          dispatch("hideNotificationEvent", getters.selected_notification);
-          return true;
+          dispatch(
+            "notification/hideNotificationEvent",
+            getters.selected_notification
+          )
+            .then(response => {
+              return response;
+            })
+            .catch(() => {
+              return false;
+            });
         } else {
           return false;
         }

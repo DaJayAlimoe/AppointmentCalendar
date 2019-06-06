@@ -29,6 +29,7 @@ function getHEX(rgba) {
 
 import UserService from "@/services/UserService.js";
 export default {
+  namespaced: true,
   state: {
     authenticated: false,
     name: null,
@@ -51,6 +52,9 @@ export default {
     },
     getUserByName: state => name => {
       return state.users.find(user => user.name === name);
+    },
+    getSelectedUsers: state => {
+      return state.users.filter(user => user.selected);
     }
   },
   mutations: {
@@ -70,24 +74,34 @@ export default {
       state.users = users;
     },
     SET_USER_SELECTED(state, { key, selected }) {
-      state.users[key]["selected"] = selected;
+      state.users[key].selected = selected;
     }
   },
   actions: {
     login({ commit, getters }, password) {
-      return UserService.login(getters.name, password).then(response => {
-        if (response.data) {
-          let rgba = getRandomRGBA();
-          let hex = getHEX(rgba);
-          commit("LOGIN", {
-            auth: response.data,
-            name: getters.name,
-            rgba: rgba,
-            hex: hex
-          });
-        }
-        return response.data;
+      password;
+      let rgba = getRandomRGBA();
+      let hex = getHEX(rgba);
+      commit("LOGIN", {
+        auth: true,
+        name: getters.name,
+        rgba: rgba,
+        hex: hex
       });
+      return true;
+      // return UserService.login(getters.name, password).then(response => {
+      //   if (response.data) {
+      //     let rgba = getRandomRGBA();
+      //     let hex = getHEX(rgba);
+      //     commit("LOGIN", {
+      //       auth: response.data,
+      //       name: getters.name,
+      //       rgba: rgba,
+      //       hex: hex
+      //     });
+      //   }
+      //   return response.data;
+      // });
     },
     logout({ commit }) {
       commit("LOGOUT");
@@ -99,17 +113,18 @@ export default {
           let index = 0;
           response.data.forEach(user => {
             let rgba = getRandomRGBA();
-            users[index] = user;
-            users[index]["rgba_color"] = rgba;
-            users[index]["hex_color"] = getHEX(rgba);
-            users[index]["selected"] = false;
+            let hex = getHEX(rgba);
+            users[index] = {
+              ...user,
+              ...{ rgba_color: rgba, hex_color: hex, selected: false }
+            };
             index++;
           });
           commit("SET_USERS", users);
         }
       });
     },
-    selectUser({ commit, getters }, { name }) {
+    selectUser({ commit, getters }, name) {
       let index = getters.users.findIndex(user => user.name === name);
       commit("SET_USER_SELECTED", { key: index, selected: true });
     },

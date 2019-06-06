@@ -46,7 +46,7 @@ export default {
     onSubmit() {
       if (this.user.name && this.password) {
         this.$store
-          .dispatch("login", this.password)
+          .dispatch("user/login", this.password)
           .then(response => {
             if (response) {
               this.password = null;

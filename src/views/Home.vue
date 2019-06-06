@@ -74,17 +74,17 @@
           <v-card v-if="notification.event !== null">
             <v-card-title class="headline">Meeting Details</v-card-title>
 
-            <v-card-text>
-              {{ "Title: " + notification.event.title }}
-            </v-card-text>
+            <v-card-text>{{
+              "Title: " + notification.event.title
+            }}</v-card-text>
             <v-card-text>{{ "Date: " + notification.event.date }}</v-card-text>
             <v-card-text>{{ "Time: " + notification.event.time }}</v-card-text>
-            <v-card-text>
-              {{ "Duration: " + notification.event.duration + " minutes" }}
-            </v-card-text>
-            <v-card-text>
-              {{ "From : " + notification.event.owner }}
-            </v-card-text>
+            <v-card-text>{{
+              "Duration: " + notification.event.duration + " minutes"
+            }}</v-card-text>
+            <v-card-text>{{
+              "From : " + notification.event.owner
+            }}</v-card-text>
 
             <v-card-actions>
               <v-spacer></v-spacer>
@@ -115,16 +115,11 @@ import EventBus from "@/event-bus.js";
 import Calendar from "@/components/Calendar.vue";
 import MeetingAssistant from "@/components/MeetingAssistant.vue";
 import { mapState } from "vuex";
-import NotificationService from "@/services/NotificationService.js";
 export default {
   name: "Home",
   data() {
     return {
-      notificationMeeting: null,
       meetinAssistantDialog: false,
-      notifiocationDialog: false,
-      notifications: [],
-      notificationId: null,
       timer: null
     };
   },
@@ -150,7 +145,7 @@ export default {
   methods: {
     logout() {
       this.$store
-        .dispatch("logout")
+        .dispatch("user/logout")
         .then(() => {
           this.$router.replace({ name: "login" });
           this.notify({ type: "success", text: "Logout Successful" });
@@ -165,33 +160,10 @@ export default {
     notify(notification) {
       this.$emit("notify", notification);
     },
-    hasNotifications() {
-      return this.notifications.length >= 1;
-    },
-    getNotificationsCount() {
-      return this.notifications.length;
-    },
-    fetchNotifications() {
-      NotificationService.getUserNotifications(this.user.name)
-        .then(response => {
-          if (response.data) {
-            this.notifications = response.data;
-          }
-        })
-        .catch(error => {
-          this.$emit("notify", {
-            type: "error",
-            text: error.message
-          });
-        });
-    },
-    cancelAutoUpdate: function() {
-      clearInterval(this.timer);
-    },
     showNotificationDetails(notification) {
       if ([1, 2, 4].includes(notification.notificationType)) {
         this.$store
-          .dispatch("removeNotification", notification)
+          .dispatch("notification/removeNotification", notification)
           .catch(error => {
             this.$emit("notify", {
               type: "error",
@@ -200,7 +172,7 @@ export default {
           });
       } else {
         this.$store
-          .dispatch("showNotificationEvent", notification)
+          .dispatch("notification/showNotificationEvent", notification)
           .catch(error => {
             this.$emit("notify", {
               type: "error",
@@ -210,11 +182,11 @@ export default {
       }
     },
     closenotificationDialog(agreed) {
-      let action = "declineNotificationEvent";
+      let action = "notification/declineNotificationEvent";
       let successText = "Meeting declined!";
       let errorText = "Meeting couldn't be declined! Try again";
       if (agreed) {
-        action = "acceptNotificationEvent";
+        action = "notification/acceptNotificationEvent";
         successText = "Meeting accepted!";
         errorText = "Meeting couldn't be saved!";
       }
@@ -251,25 +223,6 @@ export default {
       this.meetinAssistantDialog = false;
       this.$refs.calendar.removeCalUser(this.user.name);
       this.$refs.calendar.addCalUser(this.user.name, this.user.color);
-    },
-    getNotificationMeetingText() {
-      if (this.notificationMeeting) {
-        return (
-          "Title: " +
-          this.notificationMeeting.title +
-          "\nDate: " +
-          this.notificationMeeting.date +
-          "\nTime: " +
-          this.notificationMeeting.time +
-          "\nDuration: " +
-          this.notificationMeeting.duration +
-          " minutes" +
-          "\nFrom : " +
-          this.notificationMeeting.owner
-        );
-      } else {
-        return "";
-      }
     }
   },
   beforeDestroy() {
