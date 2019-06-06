@@ -260,40 +260,22 @@ export default {
     };
   },
   mounted() {
-    UserService.getUsers(this.user.name)
-      .then(response => {
-        if (response.data) {
-          this.users = response.data;
-        } else {
-          this.$emit("notify", {
-            type: "error",
-            text: "No Users Found!"
-          });
-        }
-      })
-      .catch(error => {
+    if (this.user.users.length < 1) {
+      this.$store.dispatch("fetchUsers").catch(error => {
         this.$emit("notify", {
           type: "error",
           text: error.message
         });
       });
-    ResourceService.getResources()
-      .then(response => {
-        if (response.data) {
-          this.resourceNames = response.data;
-        } else {
-          this.$emit("notify", {
-            type: "error",
-            text: "No Resources Found!"
-          });
-        }
-      })
-      .catch(error => {
+    }
+    if (this.meeting.resources.length < 1) {
+      this.$store.dispatch("fetchResources").catch(error => {
         this.$emit("notify", {
           type: "error",
           text: error.message
         });
       });
+    }
     EventBus.$on("eventToEdit", event => {
       console.log(event);
       this.id = event.id;

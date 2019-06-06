@@ -107,7 +107,7 @@ export default {
       commit("LOGOUT");
     },
     fetchUsers({ commit, getters }) {
-      UserService.getUsers(getters.name).then(response => {
+      return UserService.getUsers(getters.name).then(response => {
         if (response.data) {
           let users = [];
           let index = 0;

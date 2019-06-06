@@ -12,7 +12,12 @@ export default {
     time: null,
     time_menu: false,
     duration: null,
-    resources: []
+    resources: [],
+    rules: {
+      daylimit: value =>
+        value <= 24 || "Duration cannot be longer than 24 hours",
+      required: value => value != null || "Field cannot be empty"
+    }
   },
   getters: {
     visible: state => {
@@ -90,23 +95,19 @@ export default {
     }
   },
   actions: {
-    fetchResources({ commit, getters }) {
-      if (getters.resources.length) {
-        return true;
-      } else {
-        return ResourceService.getResources().then(response => {
-          if (response.data) {
-            let resources = response.data.map(resource => {
-              return {
-                ...resource,
-                selected: false
-              };
-            });
-            commit("SET_RESOURCES", resources);
-          }
-          return response.data;
-        });
-      }
+    fetchResources({ commit }) {
+      return ResourceService.getResources().then(response => {
+        if (response.data) {
+          let resources = response.data.map(resource => {
+            return {
+              ...resource,
+              selected: false
+            };
+          });
+          commit("SET_RESOURCES", resources);
+        }
+        return response.data;
+      });
     },
     setMeeting({ commit, getters, dispatch }, meeting) {
       commit("SET_ID", meeting.id);
