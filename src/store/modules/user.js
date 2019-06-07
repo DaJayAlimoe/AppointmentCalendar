@@ -79,29 +79,19 @@ export default {
   },
   actions: {
     login({ commit, getters }, password) {
-      password;
-      let rgba = getRandomRGBA();
-      let hex = getHEX(rgba);
-      commit("LOGIN", {
-        auth: true,
-        name: getters.name,
-        rgba: rgba,
-        hex: hex
+      return UserService.login(getters.name, password).then(response => {
+        if (response.data) {
+          let rgba = getRandomRGBA();
+          let hex = getHEX(rgba);
+          commit("LOGIN", {
+            auth: response.data,
+            name: getters.name,
+            rgba: rgba,
+            hex: hex
+          });
+        }
+        return response.data;
       });
-      return true;
-      // return UserService.login(getters.name, password).then(response => {
-      //   if (response.data) {
-      //     let rgba = getRandomRGBA();
-      //     let hex = getHEX(rgba);
-      //     commit("LOGIN", {
-      //       auth: response.data,
-      //       name: getters.name,
-      //       rgba: rgba,
-      //       hex: hex
-      //     });
-      //   }
-      //   return response.data;
-      // });
     },
     logout({ commit }) {
       commit("LOGOUT");
@@ -115,7 +105,7 @@ export default {
             let rgba = getRandomRGBA();
             let hex = getHEX(rgba);
             users[index] = {
-              ...user,
+              ...{ name: user },
               ...{ rgba_color: rgba, hex_color: hex, selected: false }
             };
             index++;

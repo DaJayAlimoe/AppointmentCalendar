@@ -7,17 +7,10 @@
             id="create_appointment"
             small
             color="primary"
-            @click.stop="meetinAssistantDialog = true"
+            @click.stop="createMeeting()"
             >Create</v-btn
           >
-          <MeetingAssistant
-            :visible="meetinAssistantDialog"
-            @eventEditTriggered="meetinAssistantDialog = true"
-            @eventDeleted="deletedEvent"
-            @close="meetinAssistantDialog = false"
-            :user="user"
-            @notify="notify"
-          />
+          <MeetingAssistant @notify="notify" />
         </v-flex>
         <v-spacer></v-spacer>
         <v-flex sm4 xs12 class="text-sm-right text-xs-center">
@@ -117,12 +110,11 @@ import MeetingAssistant from "@/components/MeetingAssistant.vue";
 import { mapState } from "vuex";
 export default {
   name: "Home",
-  data() {
-    return {
-      meetinAssistantDialog: false,
-      timer: null
-    };
+  components: {
+    Calendar,
+    MeetingAssistant
   },
+  computed: mapState(["user", "notification", "meeting", "resource"]),
   mounted() {
     EventBus.$on("eventToView", event => {
       this.notificationMeeting = event;
@@ -130,18 +122,15 @@ export default {
     });
   },
   created: function() {
-    this.$store.dispatch("fetchNotifications", 600000).catch(error => {
-      this.$emit("notify", {
-        type: "error",
-        text: error.message
+    this.$store
+      .dispatch("notification/fetchNotifications", 600000)
+      .catch(error => {
+        this.$emit("notify", {
+          type: "error",
+          text: error.message
+        });
       });
-    });
   },
-  components: {
-    Calendar,
-    MeetingAssistant
-  },
-  computed: mapState(["user", "notification"]),
   methods: {
     logout() {
       this.$store
@@ -219,8 +208,33 @@ export default {
           });
         });
     },
+    createMeeting() {
+      if (this.user.users.length < 1) {
+        this.$store.dispatch("user/fetchUsers").catch(error => {
+          this.$emit("notify", {
+            type: "error",
+            text: error.message
+          });
+        });
+      }
+      if (this.resource.resources.length < 1) {
+        this.$store.dispatch("resource/fetchResources").catch(error => {
+          this.$emit("notify", {
+            type: "error",
+            text: error.message
+          });
+        });
+      }
+      if (!this.meeting.visible) {
+        this.$store.dispatch("meeting/toggleVisibility", true).catch(error => {
+          this.$emit("notify", {
+            type: "error",
+            text: error.message
+          });
+        });
+      }
+    },
     deletedEvent() {
-      this.meetinAssistantDialog = false;
       this.$refs.calendar.removeCalUser(this.user.name);
       this.$refs.calendar.addCalUser(this.user.name, this.user.color);
     }

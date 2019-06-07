@@ -1,7 +1,7 @@
 <template>
   <v-layout row justify-center>
     <v-dialog
-      v-model="show"
+      v-model="meeting.visible"
       fullscreen
       hide-overlay
       transition="dialog-bottom-transition"
@@ -14,7 +14,7 @@
           dark
           color="primary"
         >
-          <v-btn icon dark @click.stop="show = false">
+          <v-btn icon dark @click.stop="meeting.visible = false">
             <v-icon>close</v-icon>
           </v-btn>
           <v-toolbar-title>
@@ -23,14 +23,10 @@
           </v-toolbar-title>
           <v-spacer></v-spacer>
           <v-toolbar-items>
-            <v-btn
-              v-if="meeting.id !== 0"
-              dark
-              flat
-              @click="deleteEvent(meeting.id)"
+            <v-btn v-if="meeting.id !== 0" dark flat @click="delete meeting.id"
               >Delete</v-btn
             >
-            <v-btn dark flat @click.stop="saveEvent()">Save</v-btn>
+            <v-btn dark flat @click.stop="save()">Save</v-btn>
           </v-toolbar-items>
         </v-toolbar>
         <div
@@ -45,7 +41,7 @@
                   v-model="meeting.title"
                   type="text"
                   label="Event Title"
-                  :rules="[meeting.rules.required]"
+                  :rules="[rules.required]"
                 ></v-text-field>
               </v-flex>
             </v-layout>
@@ -68,7 +64,7 @@
                       v-model="meeting.date"
                       label="Date"
                       readonly
-                      :rules="[meeting.rules.required]"
+                      :rules="[rules.required]"
                       v-on="on"
                     ></v-text-field>
                   </template>
@@ -82,7 +78,10 @@
                       flat
                       color="primary"
                       @click="
-                        this.$store.dispatch('toggleDateMenuVisibility', false)
+                        this.$store.dispatch(
+                          'meeting/toggleDateMenuVisibility',
+                          false
+                        )
                       "
                       >Cancel</v-btn
                     >
@@ -112,7 +111,7 @@
                     <v-text-field
                       v-model="meeting.time"
                       label="Start Time"
-                      :rules="[meeting.rules.required]"
+                      :rules="[rules.required]"
                       readonly
                       v-on="on"
                     ></v-text-field>
@@ -135,7 +134,7 @@
                   min="0.5"
                   max="24"
                   required
-                  :rules="[meeting.rules.daylimit]"
+                  :rules="[rules.daylimit]"
                 />
               </v-flex>
             </v-layout>
@@ -164,20 +163,22 @@
                 <v-list two-line subheader>
                   <v-list-tile
                     avatar
-                    v-for="user in user.users"
-                    :key="user.name"
+                    v-for="possibleAttendee in user.users"
+                    :key="possibleAttendee.name"
                   >
                     <v-list-tile-action>
                       <v-switch
-                        :id="user.name"
-                        v-model="user.selected"
-                        :color="user.rgba_color"
-                        @change="inviteUser(user)"
+                        :id="possibleAttendee.name"
+                        v-model="possibleAttendee.selected"
+                        :color="possibleAttendee.rgba_color"
+                        @change="inviteUser(possibleAttendee)"
                       ></v-switch>
                     </v-list-tile-action>
 
                     <v-list-tile-content>
-                      <v-list-tile-title>{{ user.name }}</v-list-tile-title>
+                      <v-list-tile-title>
+                        {{ possibleAttendee.name }}
+                      </v-list-tile-title>
                       <!-- <v-list-tile-sub-title>
                       {{ user.department }}
                       </v-list-tile-sub-title>-->
@@ -203,13 +204,15 @@
               </v-flex>
             </v-layout>
             <v-layout row wrap>
-              <template v-for="(resource, index) in calResources">
+              <template
+                v-for="(resourceComponent, index) in resourceComponents"
+              >
                 <component
                   :id="index"
                   :resources="resourceNames"
                   :date="date"
-                  :is="resource"
-                  :key="resource.name"
+                  :is="resourceComponent"
+                  :key="index"
                   @notify="notify"
                   @selectChange="resourceSelected"
                 ></component>
@@ -229,53 +232,22 @@ import EventBus from "@/event-bus.js";
 import Calendar from "@/components/Calendar.vue";
 import Resource from "@/components/Resource.vue";
 import { mapState } from "vuex";
-import UserService from "@/services/UserService.js";
-import ResourceService from "@/services/ResourceService.js";
-import MeetingService from "@/services/MeetingService.js";
 export default {
-  props: ["visible", "user"],
   components: {
     Resource,
     Calendar
   },
   data() {
     return {
-      id: 0,
-      title: null,
-      date: null,
-      date_menu: false,
-      time: null,
-      time_menu: false,
-      duration: null,
+      resourceComponents: [],
       rules: {
         daylimit: value =>
           value <= 24 || "Duration cannot be longer than 24 hours",
         required: value => value != null || "Field cannot be empty"
-      },
-      attendees: [],
-      users: [],
-      resourceNames: [],
-      resources: [],
-      selectedResources: {}
+      }
     };
   },
   mounted() {
-    if (this.user.users.length < 1) {
-      this.$store.dispatch("fetchUsers").catch(error => {
-        this.$emit("notify", {
-          type: "error",
-          text: error.message
-        });
-      });
-    }
-    if (this.meeting.resources.length < 1) {
-      this.$store.dispatch("fetchResources").catch(error => {
-        this.$emit("notify", {
-          type: "error",
-          text: error.message
-        });
-      });
-    }
     EventBus.$on("eventToEdit", event => {
       console.log(event);
       this.id = event.id;
@@ -299,45 +271,6 @@ export default {
     });
   },
   computed: mapState(["user", "meeting"]),
-  // {
-  //   show: {
-  //     get() {
-  //       return this.visible;
-  //     },
-  //     set(value) {
-  //       if (!value) {
-  //         this.$emit("close");
-  //       }
-  //     }
-  //   },
-  //   calendarUsers() {
-  //     let userMap = [];
-  //     let o = Math.round;
-  //     let r = Math.random;
-  //     let s = 255;
-  //     for (const key in this.users) {
-  //       if (this.users.hasOwnProperty(key)) {
-  //         userMap[key] = {};
-  //         userMap[key]["name"] = this.users[key];
-  //         userMap[key]["color"] =
-  //           "rgba(" +
-  //           o(r() * s) +
-  //           "," +
-  //           o(r() * s) +
-  //           "," +
-  //           o(r() * s) +
-  //           "," +
-  //           1 +
-  //           ")";
-  //         userMap[key]["selected"] = false;
-  //       }
-  //     }
-  //     return userMap;
-  //   },
-  //   calResources() {
-  //     return this.resources;
-  //   }
-  // },
   methods: {
     resourceSelected(resourceData) {
       this.selectedResources[resourceData.id] = resourceData.selected;
@@ -345,9 +278,8 @@ export default {
     notify(notification) {
       this.$emit("notify", notification);
     },
-    addResource(name) {
-      this.resources.push(Resource);
-      this.$emit("invitation", name);
+    addResource() {
+      this.resourceComponents.push(Resource);
     },
     removeResource() {
       this.resources.splice(this.resources.length - 1, 1);
@@ -364,44 +296,15 @@ export default {
         this.attendees.splice(this.attendees.indexOf(user.name), 1);
       }
     },
-    saveEvent() {
-      let eventObject = {
-        id: this.id,
-        title: this.title,
-        date: this.date,
-        time: this.time,
-        duration: this.duration * 60,
-        owner: this.user.name,
-        attendees: [],
-        ressourcen: []
-      };
-      this.attendees.forEach((attendee, index) => {
-        eventObject.attendees[index] = { name: attendee, status: 0 };
-      });
-      Object.keys(this.selectedResources).forEach(id => {
-        eventObject.ressourcen[id] = this.selectedResources[id];
-      });
-      MeetingService.createMeeting(eventObject)
+    delete(id) {
+      this.$store
+        .dispatch("meeting/deleteMeeting", id)
         .then(response => {
-          if (response.data) {
+          if (response) {
+            this.$emit("eventDeleted");
             this.$emit("notify", {
               type: "success",
-              text: "Meeting succesfully saved!"
-            });
-            this.show = false;
-            this.id = 0;
-            this.title = null;
-            this.date = null;
-            this.time = null;
-            this.duration = null;
-            this.selectedResources = {};
-            this.attendees = [];
-
-            EventBus.$emit("eventCreated");
-          } else {
-            this.$emit("notify", {
-              type: "error",
-              text: "Could not save Meeting. Try again!"
+              text: "Meeting successfully Deleted!"
             });
           }
         })
@@ -412,14 +315,20 @@ export default {
           });
         });
     },
-    deleteEvent(id) {
-      MeetingService.deleteMeeting(id)
+    save() {
+      this.$store
+        .dispatch("meeting/saveMeeting")
         .then(response => {
-          if (response.data) {
-            this.$emit("eventDeleted");
+          if (response) {
             this.$emit("notify", {
               type: "success",
-              text: "Meeting successfully Deleted!"
+              text: "Meeting succesfully saved!"
+            });
+            EventBus.$emit("eventCreated");
+          } else {
+            this.$emit("notify", {
+              type: "error",
+              text: "Could not save Meeting. Try again!"
             });
           }
         })

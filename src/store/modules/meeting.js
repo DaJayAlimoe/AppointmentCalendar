@@ -1,5 +1,4 @@
 import MeetingService from "@/services/MeetingService.js";
-import ResourceService from "@/services/ResourceService.js";
 export default {
   namespaced: true,
   state: {
@@ -11,13 +10,7 @@ export default {
     date_menu: false,
     time: null,
     time_menu: false,
-    duration: null,
-    resources: [],
-    rules: {
-      daylimit: value =>
-        value <= 24 || "Duration cannot be longer than 24 hours",
-      required: value => value != null || "Field cannot be empty"
-    }
+    duration: null
   },
   getters: {
     visible: state => {
@@ -46,17 +39,6 @@ export default {
     },
     duration: state => {
       return state.duration;
-    },
-    resources: state => {
-      return state.resources;
-    },
-    getResourceBySelected: state => selected => {
-      return state.resources.filter(resource => {
-        resource.selected === selected;
-      });
-    },
-    getResourceIndexByName: state => name => {
-      return state.resources.findIndex(resource => resource.name === name);
     }
   },
   mutations: {
@@ -84,32 +66,12 @@ export default {
     SET_DURATION(state, duration) {
       state.duration = duration;
     },
-    SET_RESOURCES(state, resources) {
-      state.resources = resources;
-    },
-    SET_RESOURCE_SELECTED(state, { key, selected }) {
-      state.resources[key].selected = selected;
-    },
     SET_VISIBLE(state, visible) {
       state.visible = visible;
     }
   },
   actions: {
-    fetchResources({ commit }) {
-      return ResourceService.getResources().then(response => {
-        if (response.data) {
-          let resources = response.data.map(resource => {
-            return {
-              ...resource,
-              selected: false
-            };
-          });
-          commit("SET_RESOURCES", resources);
-        }
-        return response.data;
-      });
-    },
-    setMeeting({ commit, getters, dispatch }, meeting) {
+    setMeeting({ commit, dispatch }, meeting) {
       commit("SET_ID", meeting.id);
       commit("SET_TITLE", meeting.title);
       commit("SET_DATE", meeting.date);
@@ -118,10 +80,7 @@ export default {
       meeting.attendees.forEach(attendee => {
         dispatch("user/selectUser", attendee.name);
       });
-      meeting.resources.forEach(resource => {
-        let index = getters.getResourceIndexByName(resource);
-        commit("SET_RESOURCE_SELECTED", { key: index, selected: true });
-      });
+      dispatch("resource/selectResources", meeting.resources);
     },
     deleteMeeting({ commit, getters, dispatch }, id) {
       if (getters.id === id) {
@@ -141,12 +100,12 @@ export default {
         date: getters.date,
         time: getters.time,
         duration: getters.duration,
-        attendees: rootGetters.getSelectedUsers.map(attendee => {
+        attendees: rootGetters["user/getSelectedUsers"].map(attendee => {
           return { name: attendee.name, status: 0 };
         }),
-        ressourcen: getters.getSelectedResourceNames
+        ressourcen: rootGetters["resource/getSelectedResourceNames"]
       };
-      MeetingService.createMeeting(meeting).then(response => {
+      return MeetingService.createMeeting(meeting).then(response => {
         if (response.data) {
           commit("SET_VISIBLE", false);
           dispatch("resetMeeting");
@@ -154,19 +113,14 @@ export default {
         return response.data;
       });
     },
-    resetMeeting({ commit, getters, dispatch }) {
+    resetMeeting({ commit, dispatch }) {
       commit("SET_ID", 0);
       commit("SET_TITLE", null);
       commit("SET_DATE", null);
       commit("SET_TIME", null);
       commit("SET_DURATION", null);
       dispatch("user/resetSelectedUsers");
-      getters.resources.forEach(resource => {
-        if (resource.selected) {
-          let index = getters.getResourceIndexByName(resource.name);
-          commit("SET_RESOURCES", { key: index, selected: false });
-        }
-      });
+      dispatch("resource/resetSelectedResources");
     },
     toggleVisibility({ commit }, visible) {
       commit("SET_VISIBLE", visible);

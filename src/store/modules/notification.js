@@ -38,57 +38,57 @@ export default {
   },
   actions: {
     fetchNotifications({ commit, rootGetters }) {
-      return NotificationService.getUserNotifications(rootGetters.name).then(
-        response => {
-          if (response.data) {
-            let notifications = response.data.map(notification => {
-              let data = {
-                ...notification,
-                ...{
-                  message: ""
-                }
-              };
-              switch (notification.notificationType) {
-                case 0:
-                  data.message = `${
-                    notification.notificationSender
-                  } invited you to a meeting`;
-                  break;
-
-                case 1:
-                  data.message = `${
-                    notification.notificationSender
-                  } accepted your meeting invitation`;
-                  break;
-
-                case 2:
-                  data.message = `${
-                    notification.notificationSender
-                  } declined your meeting invitation`;
-                  break;
-
-                case 3:
-                  data.message = `${
-                    notification.notificationSender
-                  } made changes to a meeting you are attending`;
-                  break;
-
-                case 4:
-                  data.message = `${
-                    notification.notificationSender
-                  } deleted a meeting`;
-                  break;
-
-                default:
-                  data.message = "";
-                  break;
+      return NotificationService.getUserNotifications(
+        rootGetters["user/name"]
+      ).then(response => {
+        if (response.data) {
+          let notifications = response.data.map(notification => {
+            let data = {
+              ...notification,
+              ...{
+                message: ""
               }
-              return data;
-            });
-            commit("SET_NOTIFICATIONS", notifications);
-          }
+            };
+            switch (notification.notificationType) {
+              case 0:
+                data.message = `${
+                  notification.notificationSender
+                } invited you to a meeting`;
+                break;
+
+              case 1:
+                data.message = `${
+                  notification.notificationSender
+                } accepted your meeting invitation`;
+                break;
+
+              case 2:
+                data.message = `${
+                  notification.notificationSender
+                } declined your meeting invitation`;
+                break;
+
+              case 3:
+                data.message = `${
+                  notification.notificationSender
+                } made changes to a meeting you are attending`;
+                break;
+
+              case 4:
+                data.message = `${
+                  notification.notificationSender
+                } deleted a meeting`;
+                break;
+
+              default:
+                data.message = "";
+                break;
+            }
+            return data;
+          });
+          commit("SET_NOTIFICATIONS", notifications);
         }
-      );
+      });
     },
     removeNotification({ commit, getters }, notification) {
       return NotificationService.deleteNotification(
@@ -104,7 +104,7 @@ export default {
       });
     },
     showNotificationEvent({ commit }, notification) {
-      MeetingService.getEvent(notification.meetingID).then(response => {
+      return MeetingService.getEvent(notification.meetingID).then(response => {
         if (response.data) {
           commit("SET_NOTIFICATION_EVENT", response.data);
           commit("SET_SELECTED_NOTIFICATION", notification);
@@ -116,18 +116,15 @@ export default {
       commit("SET_NOTIFICATION_EVENT", {});
       commit("SET_SELECTED_NOTIFICATION", {});
       commit("SET_NOTIFICATION_DIALOG", false);
-      return dispatch("notification/removeNotification", notification);
+      return dispatch("removeNotification", notification);
     },
     acceptNotificationEvent({ getters, rootGetters, dispatch }) {
       return MeetingService.acceptMeeting(
         getters.selected_notification.meetingID,
-        rootGetters.name
+        rootGetters["user/name"]
       ).then(response => {
         if (response.data) {
-          dispatch(
-            "notification/hideNotificationEvent",
-            getters.selected_notification
-          )
+          dispatch("hideNotificationEvent", getters.selected_notification)
             .then(response => {
               return response;
             })
@@ -142,13 +139,10 @@ export default {
     declineNotificationEvent({ getters, rootGetters, dispatch }) {
       return MeetingService.declineMeeting(
         getters.selected_notification.meetingID,
-        rootGetters.name
+        rootGetters["user/name"]
       ).then(response => {
         if (response.data) {
-          dispatch(
-            "notification/hideNotificationEvent",
-            getters.selected_notification
-          )
+          dispatch("hideNotificationEvent", getters.selected_notification)
             .then(response => {
               return response;
             })

@@ -3,12 +3,24 @@
     <v-card class="mx-auto" max-width="400">
       <v-card flat>
         <v-card-title>
-          <v-select
+          <!-- <v-select
             v-model="selected"
-            :items="resourceNames"
+            :items="getResourceBySelected(false)"
             placeholder="Select Resource"
             @change="selectResource"
             solo
+          ></v-select>-->
+          <v-select
+            v-model="selected"
+            :hint="`${selected.name}, ${selected.category}`"
+            :items="getResourceBySelected(false)"
+            item-text="name"
+            item-value="name"
+            label="Resource"
+            @change="selectResource"
+            persistent-hint
+            return-object
+            single-line
           ></v-select>
         </v-card-title>
       </v-card>
@@ -35,44 +47,37 @@
   </v-flex>
 </template>
 <script>
-import MeetingService from "@/services/MeetingService.js";
+import { mapGetters, mapState } from "vuex";
 export default {
-  props: ["resources", "date", "id"],
   data() {
     return {
       show: false,
-      selected: null,
-      events: []
+      selected: { name: "None", category: "None" }
     };
   },
   mounted() {},
   computed: {
+    ...mapState(["meeting"]),
+    ...mapGetters("resource", ["getResourceBySelected"]),
     resourceEvents() {
       return this.events;
-    },
-    resourceNames() {
-      let res = [];
-      for (const key in this.resources) {
-        if (this.resources.hasOwnProperty(key)) {
-          res[key] = this.resources[key].name;
-        }
-      }
-      return res;
     }
   },
   methods: {
-    selectResource(selectedResource) {
-      if (this.date) {
-        this.show = false;
-        MeetingService.getResourceEvents(selectedResource, this.date)
+    selectResource(resourceName) {
+      if (this.meeting.date) {
+        this.$store
+          .dispatch("resource/fetchResourceEvents", resourceName)
           .then(response => {
-            if (response.data != undefined && response.data.length != 0) {
-              this.events = response.data;
+            if (response != undefined && response.length != 0) {
+              this.events = response;
               this.show = true;
             } else {
               this.$emit("notify", {
                 type: "info",
-                text: `No Events found on ${this.date} for ${selectedResource}`
+                text: `No Events found on ${
+                  this.meeting.date
+                } for ${resourceName}`
               });
             }
           })
@@ -82,14 +87,10 @@ export default {
               text: error.message
             });
           });
-        this.$emit("selectChange", {
-          id: this.id,
-          selected: selectedResource
-        });
       } else {
         this.$emit("notify", {
           type: "info",
-          text: `Please select a date to check the availability of the resourse`,
+          text: `Please select a date to check the availability of the resource`,
           timeout: 4000
         });
       }
