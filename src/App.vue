@@ -11,7 +11,7 @@
           :timeout="snackbar.timeout"
         >
           {{ snackbar.text }}
-          <v-btn dark flat @click="snackbar.state = false">Close</v-btn>
+          <v-btn dark flat @click.prevent="snackbar.state = false">Close</v-btn>
         </v-snackbar>
       </v-content>
     </v-app>

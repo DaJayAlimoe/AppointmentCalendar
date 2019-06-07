@@ -12,11 +12,6 @@ export default {
     resources: state => {
       return state.resources;
     },
-    getResourceBySelected: state => selected => {
-      return state.resources.filter(resource => {
-        return resource.selected === selected;
-      });
-    },
     getResourceIndexByName: state => name => {
       return state.resources.findIndex(resource => resource.name === name);
     }
@@ -47,7 +42,9 @@ export default {
         return response.data;
       });
     },
-    fetchResourceEvents({ rootGetters }, resourceName) {
+    fetchResourceEvents({ commit, getters, rootGetters }, resourceName) {
+      let index = getters.getResourceIndexByName(resourceName);
+      commit("SET_RESOURCE_SELECTED", { key: index, selected: true });
       return MeetingService.getResourceEvents(
         resourceName,
         rootGetters["meeting/date"]
@@ -61,7 +58,7 @@ export default {
     },
     deselectResource({ commit, getters }, resourceName) {
       let index = getters.getResourceIndexByName(resourceName);
-      commit("SET_RESOURCE_SELECTED", { key: index, selected: true });
+      commit("SET_RESOURCE_SELECTED", { key: index, selected: false });
     },
     resetSelectedResources({ commit, getters }) {
       getters.resources.forEach(resource => {

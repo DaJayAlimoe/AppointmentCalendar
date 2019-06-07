@@ -13,11 +13,11 @@
           <v-select
             v-model="selected"
             :hint="`${selected.name}, category : ${selected.category}`"
-            :items="getResourceBySelected(false)"
+            :items="resource.resources"
             item-text="name"
             item-value="name"
             label="Resource"
-            @change="selectResource"
+            @change="selectResource(selected)"
             persistent-hint
             return-object
             single-line
@@ -47,39 +47,48 @@
   </v-flex>
 </template>
 <script>
-import { mapGetters, mapState } from "vuex";
+import { mapState } from "vuex";
 export default {
   data() {
     return {
       show: false,
+      previous: null,
       selected: { name: "None", category: "None" }
     };
   },
   mounted() {},
   computed: {
-    ...mapState(["meeting"]),
-    ...mapGetters("resource", ["getResourceBySelected"]),
+    ...mapState(["meeting", "resource"]),
     resourceEvents() {
       return this.events;
     }
   },
   methods: {
-    selectResource(resourceName) {
+    selectResource(resource) {
       if (this.meeting.date) {
         this.$store
-          .dispatch("resource/fetchResourceEvents", resourceName)
+          .dispatch("resource/fetchResourceEvents", resource.name)
           .then(response => {
-            if (response != undefined && response.length != 0) {
-              this.events = response;
+            if (response.data != undefined && response.data.length != 0) {
+              this.events = response.data;
               this.show = true;
             } else {
               this.$emit("notify", {
                 type: "info",
-                text: `No Events found on ${
-                  this.meeting.date
-                } for ${resourceName}`
+                text: `No Events found on ${this.meeting.date} for ${
+                  resource.nam
+                }`
               });
+              this.show = false;
             }
+            if (this.previous) {
+              this.$store.dispatch(
+                "resource/deselectResource",
+                this.previous.name
+              );
+            }
+            console.log(this.previous);
+            this.previous = resource;
           })
           .catch(error => {
             this.$emit("notify", {
@@ -94,6 +103,9 @@ export default {
           timeout: 4000
         });
       }
+    },
+    destroy() {
+      this.$store.dispatch("resource/deselectResource", this.selected.name);
     }
   }
 };

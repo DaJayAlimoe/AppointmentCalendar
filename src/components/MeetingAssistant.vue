@@ -42,6 +42,8 @@
                   type="text"
                   label="Event Title"
                   :rules="[rules.required]"
+                  @focus="magic_flag = true"
+                  @blur="setTitle(meeting.title)"
                 ></v-text-field>
               </v-flex>
             </v-layout>
@@ -85,10 +87,7 @@
                       "
                       >Cancel</v-btn
                     >
-                    <v-btn
-                      flat
-                      color="primary"
-                      @click="$refs.menu1.save(meeting.date)"
+                    <v-btn flat color="primary" @click="setDate(meeting.date)"
                       >OK</v-btn
                     >
                   </v-date-picker>
@@ -120,7 +119,7 @@
                     format="24hr"
                     v-model="meeting.time"
                     full-width
-                    @click:minute="$refs.menu2.save(meeting.time)"
+                    @click:minute="setTime(meeting.time)"
                   ></v-time-picker>
                 </v-menu>
               </v-flex>
@@ -134,6 +133,7 @@
                   min="0.5"
                   max="24"
                   required
+                  @blur="setDuration(meeting.duration)"
                   :rules="[rules.daylimit]"
                 />
               </v-flex>
@@ -176,9 +176,9 @@
                     </v-list-tile-action>
 
                     <v-list-tile-content>
-                      <v-list-tile-title>
-                        {{ possibleAttendee.name }}
-                      </v-list-tile-title>
+                      <v-list-tile-title>{{
+                        possibleAttendee.name
+                      }}</v-list-tile-title>
                       <!-- <v-list-tile-sub-title>
                       {{ user.department }}
                       </v-list-tile-sub-title>-->
@@ -195,12 +195,14 @@
                 <v-subheader>Resources</v-subheader>
               </v-flex>
               <v-flex xs1>
-                <v-btn @click="removeResource()">
+                <v-btn @click="removeResourceComponent()">
                   <v-icon>delete</v-icon>
                 </v-btn>
               </v-flex>
               <v-flex xs1>
-                <v-btn color="secondary" @click="addResource()">Add</v-btn>
+                <v-btn color="secondary" @click="addResourceComponent()"
+                  >Add</v-btn
+                >
               </v-flex>
             </v-layout>
             <v-layout row wrap>
@@ -208,13 +210,10 @@
                 v-for="(resourceComponent, index) in resourceComponents"
               >
                 <component
-                  :id="index"
-                  :resources="resourceNames"
-                  :date="date"
                   :is="resourceComponent"
                   :key="index"
+                  :ref="'resource-' + index"
                   @notify="notify"
-                  @selectChange="resourceSelected"
                 ></component>
               </template>
             </v-layout>
@@ -247,44 +246,41 @@ export default {
       }
     };
   },
-  mounted() {
-    // EventBus.$on("eventToEdit", event => {
-    //   console.log(event);
-    //   this.id = event.id;
-    //   this.title = event.title;
-    //   this.date = event.date;
-    //   this.time = event.time;
-    //   this.duration = event.duration / 60;
-    //   // for (const key in event.attendees) {
-    //   //   if (event.attendees.hasOwnProperty(key)) {
-    //   //     const attendee = event.attendees[key];
-    //   //     var userSwitch = document.getElementById(attendee.name);
-    //   //     if ("createEvent" in document) {
-    //   //       var evt = document.createEvent("HTMLEvents");
-    //   //       evt.initEvent("change", false, true);
-    //   //       userSwitch.dispatchEvent(evt);
-    //   //     }
-    //   //   }
-    //   // }
-    //   this.$emit("eventEditTriggered");
-    // });
-  },
+  mounted() {},
   computed: mapState(["user", "meeting"]),
   methods: {
-    resourceSelected(resourceData) {
-      this.selectedResources[resourceData.id] = resourceData.selected;
-    },
     notify(notification) {
       this.$emit("notify", notification);
     },
-    addResource() {
+    addResourceComponent() {
       this.resourceComponents.push(Resource);
     },
-    removeResource() {
-      this.resources.splice(this.resources.length - 1, 1);
-      if (this.selectedResources[this.resources.length - 1]) {
-        delete this.selectedResources[this.resources.length - 1];
+    removeResourceComponent() {
+      if (this.resourceComponents.length) {
+        let index = this.resourceComponents.length - 1;
+        if (this.resourceComponents[index]) {
+          this.$refs[`resource-${index}`][0].destroy();
+          if (!index) {
+            this.resourceComponents = [];
+          } else {
+            this.resourceComponents = this.resourceComponents.splice(index, 1);
+          }
+        }
       }
+    },
+    setTitle(title) {
+      this.$store.dispatch("meeting/setTitle", title);
+    },
+    setDate(date) {
+      this.$refs.menu1.save(date);
+      this.$store.dispatch("meeting/setDate", date);
+    },
+    setTime(time) {
+      this.$refs.menu2.save(time);
+      this.$store.dispatch("meeting/setTime", time);
+    },
+    setDuration(duration) {
+      this.$store.dispatch("meeting/setDuration", duration);
     },
     inviteUser(user) {
       if (user.selected) {

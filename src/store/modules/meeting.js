@@ -99,11 +99,13 @@ export default {
         title: getters.title,
         date: getters.date,
         time: getters.time,
-        duration: getters.duration,
+        duration: parseFloat(getters.duration) * 60,
         attendees: rootGetters["user/getSelectedUsers"].map(attendee => {
           return { name: attendee.name, status: 0 };
         }),
-        ressourcen: rootGetters["resource/getSelectedResourceNames"]
+        ressourcen: rootGetters["resource/resources"].map(resource => {
+          return resource.name;
+        })
       };
       return MeetingService.createMeeting(meeting).then(response => {
         if (response.data) {
@@ -130,6 +132,18 @@ export default {
     },
     toggleTimeMenuVisibility({ commit }, visible) {
       commit("SET_TIME_MENU", visible);
+    },
+    setTitle({ commit }, title) {
+      commit("SET_TITLE", title);
+    },
+    setDate({ commit }, date) {
+      commit("SET_DATE", date);
+    },
+    setTime({ commit }, time) {
+      commit("SET_TIME", time);
+    },
+    setDuration({ commit }, duration) {
+      commit("SET_DURATION", duration);
     }
   }
 };
