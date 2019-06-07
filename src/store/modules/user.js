@@ -114,9 +114,9 @@ export default {
         }
       });
     },
-    selectUser({ commit, getters }, name) {
+    selectUser({ commit, getters }, { name, value }) {
       let index = getters.users.findIndex(user => user.name === name);
-      commit("SET_USER_SELECTED", { key: index, selected: true });
+      commit("SET_USER_SELECTED", { key: index, selected: value });
     },
     resetSelectedUsers({ commit, getters }) {
       getters.users.forEach((user, index) => {

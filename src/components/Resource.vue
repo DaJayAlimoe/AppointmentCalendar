@@ -12,7 +12,7 @@
           ></v-select>-->
           <v-select
             v-model="selected"
-            :hint="`${selected.name}, ${selected.category}`"
+            :hint="`${selected.name}, category : ${selected.category}`"
             :items="getResourceBySelected(false)"
             item-text="name"
             item-value="name"

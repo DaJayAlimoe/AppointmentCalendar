@@ -248,27 +248,26 @@ export default {
     };
   },
   mounted() {
-    EventBus.$on("eventToEdit", event => {
-      console.log(event);
-      this.id = event.id;
-      this.title = event.title;
-      this.date = event.date;
-      this.time = event.time;
-      this.duration = event.duration / 60;
-      // for (const key in event.attendees) {
-      //   if (event.attendees.hasOwnProperty(key)) {
-      //     const attendee = event.attendees[key];
-      //     var userSwitch = document.getElementById(attendee.name);
-      //     if ("createEvent" in document) {
-      //       var evt = document.createEvent("HTMLEvents");
-      //       evt.initEvent("change", false, true);
-      //       userSwitch.dispatchEvent(evt);
-      //     }
-      //   }
-      // }
-
-      this.$emit("eventEditTriggered");
-    });
+    // EventBus.$on("eventToEdit", event => {
+    //   console.log(event);
+    //   this.id = event.id;
+    //   this.title = event.title;
+    //   this.date = event.date;
+    //   this.time = event.time;
+    //   this.duration = event.duration / 60;
+    //   // for (const key in event.attendees) {
+    //   //   if (event.attendees.hasOwnProperty(key)) {
+    //   //     const attendee = event.attendees[key];
+    //   //     var userSwitch = document.getElementById(attendee.name);
+    //   //     if ("createEvent" in document) {
+    //   //       var evt = document.createEvent("HTMLEvents");
+    //   //       evt.initEvent("change", false, true);
+    //   //       userSwitch.dispatchEvent(evt);
+    //   //     }
+    //   //   }
+    //   // }
+    //   this.$emit("eventEditTriggered");
+    // });
   },
   computed: mapState(["user", "meeting"]),
   methods: {
@@ -290,11 +289,13 @@ export default {
     inviteUser(user) {
       if (user.selected) {
         this.$refs.sharedCalendar.addCalUser(user.name, user.color);
-        this.attendees.push(user.name);
       } else {
         this.$refs.sharedCalendar.removeCalUser(user.name);
-        this.attendees.splice(this.attendees.indexOf(user.name), 1);
       }
+      this.$store.dispatch("user/selectUser", {
+        name: user.name,
+        value: user.selected
+      });
     },
     delete(id) {
       this.$store
