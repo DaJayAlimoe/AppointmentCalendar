@@ -78,7 +78,7 @@ export default {
     }
   },
   actions: {
-    login({ commit, getters }, password) {
+    login({ commit, getters, dispatch }, password) {
       return UserService.login(getters.name, password).then(response => {
         if (response.data) {
           let rgba = getRandomRGBA();
@@ -89,6 +89,7 @@ export default {
             rgba: rgba,
             hex: hex
           });
+          dispatch("meeting/fetchUserEvents", getters.name, { root: true });
         }
         return response.data;
       });
@@ -114,9 +115,16 @@ export default {
         }
       });
     },
-    selectUser({ commit, getters }, { name, value }) {
+    selectUser({ commit, getters, dispatch }, { name, value }) {
       let index = getters.users.findIndex(user => user.name === name);
-      commit("SET_USER_SELECTED", { key: index, selected: value });
+      if (index >= 0)
+        commit("SET_USER_SELECTED", { key: index, selected: value });
+
+      if (value) {
+        dispatch("meeting/fetchUserEvents", name, { root: true });
+      } else {
+        dispatch("meeting/removeUserEvents", name, { root: true });
+      }
     },
     resetSelectedUsers({ commit, getters }) {
       getters.users.forEach((user, index) => {

@@ -176,9 +176,9 @@
                     </v-list-tile-action>
 
                     <v-list-tile-content>
-                      <v-list-tile-title>{{
-                        possibleAttendee.name
-                      }}</v-list-tile-title>
+                      <v-list-tile-title>
+                        {{ possibleAttendee.name }}
+                      </v-list-tile-title>
                       <!-- <v-list-tile-sub-title>
                       {{ user.department }}
                       </v-list-tile-sub-title>-->
@@ -258,13 +258,10 @@ export default {
     removeResourceComponent() {
       if (this.resourceComponents.length) {
         let index = this.resourceComponents.length - 1;
-        if (this.resourceComponents[index]) {
-          this.$refs[`resource-${index}`][0].destroy();
-          if (!index) {
-            this.resourceComponents = [];
-          } else {
-            this.resourceComponents = this.resourceComponents.splice(index, 1);
-          }
+        this.$refs[`resource-${index}`][0].destroy();
+        this.resourceComponents.splice(index, 1);
+        if (!this.resourceComponents.length) {
+          this.resourceComponents = [];
         }
       }
     },
@@ -283,11 +280,6 @@ export default {
       this.$store.dispatch("meeting/setDuration", duration);
     },
     inviteUser(user) {
-      if (user.selected) {
-        this.$refs.sharedCalendar.addCalUser(user.name, user.color);
-      } else {
-        this.$refs.sharedCalendar.removeCalUser(user.name);
-      }
       this.$store.dispatch("user/selectUser", {
         name: user.name,
         value: user.selected
@@ -316,12 +308,18 @@ export default {
       this.$store
         .dispatch("meeting/saveMeeting")
         .then(response => {
+          console.log(`${response} from meeting/saveMeeting`);
           if (response) {
             this.$emit("notify", {
               type: "success",
               text: "Meeting succesfully saved!"
             });
-            EventBus.$emit("eventCreated");
+            this.$store.dispatch("meeting/resetMeeting");
+            this.$store.dispatch("user/resetSelectedUsers");
+            while (this.resourceComponents.length) {
+              this.removeResourceComponent();
+            }
+            // EventBus.$emit("eventCreated");
           } else {
             this.$emit("notify", {
               type: "error",

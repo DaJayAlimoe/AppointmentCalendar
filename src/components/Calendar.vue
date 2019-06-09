@@ -57,108 +57,60 @@
 
 <script>
 import EventBus from "@/event-bus.js";
+import { mapState } from "vuex";
 import MeetingService from "@/services/MeetingService.js";
 export default {
   name: "Calendar",
-  props: ["user"],
   data: () => ({
     today:
       new Date().getFullYear() +
       "-" +
       (new Date().getMonth() + 1) +
       "-" +
-      new Date().getDate(),
-    events: [],
-    userColor: {}
+      new Date().getDate()
   }),
-  created() {
-    EventBus.$on("eventCreated", () => {
-      this.removeCalUser(this.user.name);
-      this.addCalUser(this.user.name, this.user.color);
-    });
-  },
+  created() {},
   computed: {
-    // convert the list of events into a map of lists keyed by date
+    ...mapState(["user", "meeting"]),
     eventsMap() {
       const map = {};
-      for (const key in this.events) {
-        if (this.events.hasOwnProperty(key)) {
-          if (!Array.isArray(map[this.events[key].date])) {
-            map[this.events[key].date] = [];
+      for (const key in this.meeting.events) {
+        if (this.meeting.events.hasOwnProperty(key)) {
+          if (!Array.isArray(map[this.meeting.events[key].date])) {
+            map[this.meeting.events[key].date] = [];
           }
-          map[this.events[key].date].push(this.events[key]);
+          map[this.meeting.events[key].date].push(this.meeting.events[key]);
         }
       }
       return map;
     }
   },
   mounted() {
-    this.addCalUser(this.user.name, this.user.color);
     this.$refs.calendar.scrollToTime("08:00");
   },
   methods: {
     open(event) {
       if (event.owner === this.user.name) {
-        EventBus.$emit("eventToEdit", event);
+        this.$store.dispatch("meeting/setMeeting", event);
+        this.$store.dispatch("meeting/toggleVisibility", true);
       } else {
-        EventBus.$emit("eventToView", event);
-      }
-    },
-    addCalUser(username, color) {
-      this.userColor[username] = color;
-      MeetingService.getUserEvents(username)
-        .then(response => {
-          if (response.data) {
-            for (const key in response.data) {
-              if (response.data.hasOwnProperty(key)) {
-                let eventData = response.data[key];
-                eventData["for"] = username;
-                this.events.push(eventData);
-              }
-            }
-          } else {
+        this.$store
+          .dispatch("notification/showNotificationEvent", {
+            meetingID: event.id
+          })
+          .catch(error => {
             this.$emit("notify", {
-              type: "info",
-              text: `No events found for user ${username}`
+              type: "error",
+              text: error.message
             });
-          }
-        })
-        .catch(error => {
-          this.$emit("notify", {
-            type: "error",
-            text: error.message
           });
-        });
-    },
-    removeCalUser(username) {
-      let newEvents = [];
-      delete this.userColor[username];
-      for (const key in this.events) {
-        if (this.events.hasOwnProperty(key)) {
-          if (this.events[key]["for"] != username) {
-            newEvents[key] = this.events[key];
-          }
-        }
       }
-      this.events = newEvents;
     },
     getuserColor(username) {
-      let rgba = this.userColor[username];
-      var parts = rgba.substring(rgba.indexOf("(")).split(","),
-        r = parseInt(this.trim(parts[0].substring(1)), 10),
-        g = parseInt(this.trim(parts[1]), 10),
-        b = parseInt(this.trim(parts[2]), 10),
-        a = parseFloat(
-          this.trim(parts[3].substring(0, parts[3].length - 1))
-        ).toFixed(2);
-
-      return (
-        "#" +
-        r.toString(16) +
-        g.toString(16) +
-        b.toString(16) +
-        (a * 255).toString(16)
-      ).substring(0, 7);
+      if (this.user.name === username) return this.user.hex_color;
+      return this.user.users.find(user => {
+        user.name === username;
+      }).hex_color;
     },
     trim(str) {
       return str.replace(/^\s+|\s+$/gm, "");

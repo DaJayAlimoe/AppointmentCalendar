@@ -6,8 +6,8 @@
         <v-snackbar
           v-model="snackbar.state"
           :color="snackbar.type"
-          :bottom="true"
-          :left="true"
+          :top="true"
+          :middle="true"
           :timeout="snackbar.timeout"
         >
           {{ snackbar.text }}
@@ -44,7 +44,7 @@ export default {
     notify(snackbar) {
       this.snackbar.type = snackbar.type ? snackbar.type : this.snackbar.type;
       if (this.snackbar.type === "info" && snackbar.timeout === undefined) {
-        this.snackbar.timeout = 3000;
+        this.snackbar.timeout = 2000;
       } else {
         this.snackbar.timeout = snackbar.timeout
           ? snackbar.timeout

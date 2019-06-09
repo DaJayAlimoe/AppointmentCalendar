@@ -100,7 +100,7 @@ export default {
         this.$emit("notify", {
           type: "info",
           text: `Please select a date to check the availability of the resource`,
-          timeout: 4000
+          timeout: 3000
         });
       }
     },

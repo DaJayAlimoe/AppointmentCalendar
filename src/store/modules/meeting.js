@@ -1,4 +1,5 @@
 import MeetingService from "@/services/MeetingService.js";
+import { Promise } from "q";
 export default {
   namespaced: true,
   state: {
@@ -10,7 +11,8 @@ export default {
     date_menu: false,
     time: null,
     time_menu: false,
-    duration: null
+    duration: null,
+    events: []
   },
   getters: {
     visible: state => {
@@ -39,9 +41,15 @@ export default {
     },
     duration: state => {
       return state.duration;
+    },
+    events: state => {
+      return state.events;
     }
   },
   mutations: {
+    SET_VISIBLE(state, visible) {
+      state.visible = visible;
+    },
     SET_ID(state, id) {
       state.id = id;
     },
@@ -66,8 +74,8 @@ export default {
     SET_DURATION(state, duration) {
       state.duration = duration;
     },
-    SET_VISIBLE(state, visible) {
-      state.visible = visible;
+    SET_EVENTS(state, events) {
+      state.events = events;
     }
   },
   actions: {
@@ -77,10 +85,13 @@ export default {
       commit("SET_DATE", meeting.date);
       commit("SET_TIME", meeting.time);
       commit("SET_DURATION", meeting.duration / 60);
-      meeting.attendees.forEach(attendee => {
-        dispatch("user/selectUser", attendee.name);
-      });
-      dispatch("resource/selectResources", meeting.resources);
+
+      if (typeof meeting.attendees !== "undefined")
+        meeting.attendees.forEach(attendee => {
+          dispatch("user/selectUser", attendee.name, { root: true });
+        });
+      if (typeof meeting.resources !== "undefined")
+        dispatch("resource/selectResources", meeting.resources, { root: true });
     },
     deleteMeeting({ commit, getters, dispatch }, id) {
       if (getters.id === id) {
@@ -93,45 +104,44 @@ export default {
         });
       }
     },
-    saveMeeting({ commit, getters, rootGetters, dispatch }) {
-      let meeting = {
-        id: getters.id,
-        title: getters.title,
-        date: getters.date,
-        time: getters.time,
-        duration: parseFloat(getters.duration) * 60,
-        attendees: rootGetters["user/getSelectedUsers"].map(attendee => {
-          return { name: attendee.name, status: 0 };
-        }),
-        ressourcen: rootGetters["resource/resources"].map(resource => {
-          return resource.name;
-        })
-      };
-      return MeetingService.createMeeting(meeting).then(response => {
-        if (response.data) {
-          commit("SET_VISIBLE", false);
-          dispatch("resetMeeting");
-        }
-        return response.data;
-      });
+    saveMeeting({ commit, getters, rootGetters }) {
+      if (getters.title && getters.date && getters.time && getters.duration) {
+        let meeting = {
+          id: getters.id,
+          title: getters.title,
+          date: getters.date,
+          time: getters.time,
+          duration: parseFloat(getters.duration) * 60,
+          owner: rootGetters["user/name"],
+          attendees: rootGetters["user/getSelectedUsers"].map(attendee => {
+            return { name: attendee.name, status: 0 };
+          }),
+          ressourcen: rootGetters["resource/resources"].map(resource => {
+            return resource.name;
+          })
+        };
+        return MeetingService.createMeeting(meeting).then(response => {
+          if (response.data) {
+            commit("SET_VISIBLE", false);
+          }
+          return response.data;
+        });
+      } else {
+        return new Promise(function(resolve) {
+          resolve(false);
+        });
+      }
     },
-    resetMeeting({ commit, dispatch }) {
+    resetMeeting({ commit }) {
       commit("SET_ID", 0);
-      commit("SET_TITLE", null);
-      commit("SET_DATE", null);
-      commit("SET_TIME", null);
-      commit("SET_DURATION", null);
-      dispatch("user/resetSelectedUsers");
-      dispatch("resource/resetSelectedResources");
+      commit("SET_OWNER", "");
+      commit("SET_TITLE", "");
+      commit("SET_DATE", "");
+      commit("SET_TIME", "");
+      commit("SET_DURATION", "");
     },
     toggleVisibility({ commit }, visible) {
       commit("SET_VISIBLE", visible);
-    },
-    toggleDateMenuVisibility({ commit }, visible) {
-      commit("SET_DATE_MENU", visible);
-    },
-    toggleTimeMenuVisibility({ commit }, visible) {
-      commit("SET_TIME_MENU", visible);
     },
     setTitle({ commit }, title) {
       commit("SET_TITLE", title);
@@ -144,6 +154,35 @@ export default {
     },
     setDuration({ commit }, duration) {
       commit("SET_DURATION", duration);
+    },
+    fetchUserEvents({ commit, getters }, username) {
+      return MeetingService.getUserEvents(username).then(response => {
+        let newEvents = getters.events;
+        if (response.data) {
+          for (const key in response.data) {
+            if (response.data.hasOwnProperty(key)) {
+              let eventData = {
+                ...response.data[key],
+                ...{ for: username }
+              };
+              newEvents.push(eventData);
+            }
+          }
+          commit("SET_EVENTS", newEvents);
+        }
+        return response.data;
+      });
+    },
+    removeUserEvents({ commit, getters }, username) {
+      let newEvents = [];
+      for (const key in getters.events) {
+        if (getters.events.hasOwnProperty(key)) {
+          if (getters.events[key]["for"] != username) {
+            newEvents.push(getters.events[key]);
+          }
+        }
+      }
+      commit("SET_EVENTS", newEvents);
     }
   }
 };

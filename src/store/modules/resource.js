@@ -44,27 +44,32 @@ export default {
     },
     fetchResourceEvents({ commit, getters, rootGetters }, resourceName) {
       let index = getters.getResourceIndexByName(resourceName);
-      commit("SET_RESOURCE_SELECTED", { key: index, selected: true });
-      return MeetingService.getResourceEvents(
-        resourceName,
-        rootGetters["meeting/date"]
-      );
+      if (index >= 0) {
+        commit("SET_RESOURCE_SELECTED", { key: index, selected: true });
+        return MeetingService.getResourceEvents(
+          resourceName,
+          rootGetters["meeting/date"]
+        );
+      }
     },
     selectResources({ commit, getters }, resources) {
       resources.forEach(resource => {
         let index = getters.getResourceIndexByName(resource);
-        commit("SET_RESOURCE_SELECTED", { key: index, selected: true });
+        if (index >= 0)
+          commit("SET_RESOURCE_SELECTED", { key: index, selected: true });
       });
     },
     deselectResource({ commit, getters }, resourceName) {
       let index = getters.getResourceIndexByName(resourceName);
-      commit("SET_RESOURCE_SELECTED", { key: index, selected: false });
+      if (index >= 0)
+        commit("SET_RESOURCE_SELECTED", { key: index, selected: false });
     },
     resetSelectedResources({ commit, getters }) {
       getters.resources.forEach(resource => {
         if (resource.selected) {
           let index = getters.getResourceIndexByName(resource.name);
-          commit("SET_RESOURCES", { key: index, selected: false });
+          if (index >= 0)
+            commit("SET_RESOURCES", { key: index, selected: false });
         }
       });
     }
