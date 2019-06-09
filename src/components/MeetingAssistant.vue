@@ -14,7 +14,7 @@
           dark
           color="primary"
         >
-          <v-btn icon dark @click.stop="meeting.visible = false">
+          <v-btn icon dark @click.stop="reset()">
             <v-icon>close</v-icon>
           </v-btn>
           <v-toolbar-title>
@@ -23,7 +23,11 @@
           </v-toolbar-title>
           <v-spacer></v-spacer>
           <v-toolbar-items>
-            <v-btn v-if="meeting.id !== 0" dark flat @click="delete meeting.id"
+            <v-btn
+              v-if="meeting.id !== 0"
+              dark
+              flat
+              @click="deleteEvent(meeting.id)"
               >Delete</v-btn
             >
             <v-btn dark flat @click.stop="save()">Save</v-btn>
@@ -176,9 +180,9 @@
                     </v-list-tile-action>
 
                     <v-list-tile-content>
-                      <v-list-tile-title>
-                        {{ possibleAttendee.name }}
-                      </v-list-tile-title>
+                      <v-list-tile-title>{{
+                        possibleAttendee.name
+                      }}</v-list-tile-title>
                       <!-- <v-list-tile-sub-title>
                       {{ user.department }}
                       </v-list-tile-sub-title>-->
@@ -227,7 +231,6 @@
 </template>
 
 <script>
-import EventBus from "@/event-bus.js";
 import Calendar from "@/components/Calendar.vue";
 import Resource from "@/components/Resource.vue";
 import { mapState } from "vuex";
@@ -246,8 +249,22 @@ export default {
       }
     };
   },
-  mounted() {},
-  computed: mapState(["user", "meeting"]),
+  mounted() {
+    this.$store.watch(
+      (state, getters) => getters.resources,
+      (newValue, oldValue) => {
+        console.log(`Updating from ${oldValue} to ${newValue}`);
+
+        // Do whatever makes sense now
+        if (newValue === "success") {
+          this.complex = {
+            deep: "some deep object"
+          };
+        }
+      }
+    );
+  },
+  computed: mapState(["user", "meeting", "resource"]),
   methods: {
     notify(notification) {
       this.$emit("notify", notification);
@@ -284,13 +301,24 @@ export default {
         name: user.name,
         value: user.selected
       });
+      if (user.selected) {
+        this.$store.dispatch("meeting/fetchUserEvents", user.name);
+      } else {
+        this.$store.dispatch("meeting/removeUserEvents", user.name);
+      }
     },
-    delete(id) {
+    reset() {
+      this.$store.dispatch("meeting/resetMeeting");
+      this.$store.dispatch("user/resetSelectedUsers");
+      this.$store.dispatch("meeting/toggleVisibility", false);
+    },
+    deleteEvent(id) {
       this.$store
         .dispatch("meeting/deleteMeeting", id)
         .then(response => {
           if (response) {
-            this.$emit("eventDeleted");
+            this.$store.dispatch("meeting/removeUserEvents", this.user.name);
+            this.$store.dispatch("meeting/fetchUserEvents", this.user.name);
             this.$emit("notify", {
               type: "success",
               text: "Meeting successfully Deleted!"
@@ -308,7 +336,6 @@ export default {
       this.$store
         .dispatch("meeting/saveMeeting")
         .then(response => {
-          console.log(`${response} from meeting/saveMeeting`);
           if (response) {
             this.$emit("notify", {
               type: "success",
@@ -319,7 +346,8 @@ export default {
             while (this.resourceComponents.length) {
               this.removeResourceComponent();
             }
-            // EventBus.$emit("eventCreated");
+            this.$store.dispatch("meeting/removeUserEvents", this.user.name);
+            this.$store.dispatch("meeting/fetchUserEvents", this.user.name);
           } else {
             this.$emit("notify", {
               type: "error",

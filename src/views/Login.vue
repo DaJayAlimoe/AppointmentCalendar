@@ -40,7 +40,7 @@ export default {
     return { password: null };
   },
   computed: {
-    ...mapState(["user"])
+    ...mapState(["user", "resource"])
   },
   methods: {
     onSubmit() {
@@ -55,6 +55,22 @@ export default {
                 text: "Login Successful"
               });
               this.$router.replace({ name: "home" });
+              if (!this.user.users.length) {
+                this.$store.dispatch("user/fetchUsers").catch(error => {
+                  this.$emit("notify", {
+                    type: "error",
+                    text: error.message
+                  });
+                });
+              }
+              if (!this.resource.resources.length) {
+                this.$store.dispatch("resource/fetchResources").catch(error => {
+                  this.$emit("notify", {
+                    type: "error",
+                    text: error.message
+                  });
+                });
+              }
             } else {
               this.$emit("notify", {
                 type: "error",

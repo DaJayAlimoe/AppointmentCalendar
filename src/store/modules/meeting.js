@@ -79,19 +79,12 @@ export default {
     }
   },
   actions: {
-    setMeeting({ commit, dispatch }, meeting) {
+    setMeeting({ commit }, meeting) {
       commit("SET_ID", meeting.id);
       commit("SET_TITLE", meeting.title);
       commit("SET_DATE", meeting.date);
       commit("SET_TIME", meeting.time);
       commit("SET_DURATION", meeting.duration / 60);
-
-      if (typeof meeting.attendees !== "undefined")
-        meeting.attendees.forEach(attendee => {
-          dispatch("user/selectUser", attendee.name, { root: true });
-        });
-      if (typeof meeting.resources !== "undefined")
-        dispatch("resource/selectResources", meeting.resources, { root: true });
     },
     deleteMeeting({ commit, getters, dispatch }, id) {
       if (getters.id === id) {
@@ -132,13 +125,16 @@ export default {
         });
       }
     },
-    resetMeeting({ commit }) {
+    resetMeeting({ commit, rootGetters, dispatch }) {
       commit("SET_ID", 0);
       commit("SET_OWNER", "");
       commit("SET_TITLE", "");
       commit("SET_DATE", "");
       commit("SET_TIME", "");
       commit("SET_DURATION", "");
+      rootGetters["user/users"].forEach(user => {
+        dispatch("removeUserEvents", user.name);
+      });
     },
     toggleVisibility({ commit }, visible) {
       commit("SET_VISIBLE", visible);
@@ -177,12 +173,15 @@ export default {
       let newEvents = [];
       for (const key in getters.events) {
         if (getters.events.hasOwnProperty(key)) {
-          if (getters.events[key]["for"] != username) {
+          if (getters.events[key]["for"] !== username) {
             newEvents.push(getters.events[key]);
           }
         }
       }
       commit("SET_EVENTS", newEvents);
+    },
+    resetEvents({ commit }) {
+      commit("SET_EVENTS", []);
     }
   }
 };

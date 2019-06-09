@@ -76,7 +76,7 @@ export default {
               this.$emit("notify", {
                 type: "info",
                 text: `No Events found on ${this.meeting.date} for ${
-                  resource.nam
+                  resource.name
                 }`
               });
               this.show = false;

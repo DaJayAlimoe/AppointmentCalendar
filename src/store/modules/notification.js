@@ -1,5 +1,6 @@
 import NotificationService from "@/services/NotificationService.js";
 import MeetingService from "@/services/MeetingService.js";
+import { Promise } from "q";
 export default {
   namespaced: true,
   state: {
@@ -91,17 +92,23 @@ export default {
       });
     },
     removeNotification({ commit, getters }, notification) {
-      return NotificationService.deleteNotification(
-        notification.notificationID
-      ).then(response => {
-        if (response.data) {
-          let notifications = getters.notifications.filter(element => {
-            return element.notificationID !== notification.notificationID;
-          });
-          commit("SET_NOTIFICATIONS", notifications);
-        }
-        return response.data;
-      });
+      if (notification.notificationID === null) {
+        return new Promise(function(resolve) {
+          resolve(true);
+        });
+      } else {
+        return NotificationService.deleteNotification(
+          notification.notificationID
+        ).then(response => {
+          if (response.data) {
+            let notifications = getters.notifications.filter(element => {
+              return element.notificationID !== notification.notificationID;
+            });
+            commit("SET_NOTIFICATIONS", notifications);
+          }
+          return response.data;
+        });
+      }
     },
     showNotificationEvent({ commit }, notification) {
       return MeetingService.getEvent(notification.meetingID).then(response => {
@@ -112,46 +119,25 @@ export default {
         }
       });
     },
-    hideNotificationEvent({ commit, dispatch }, notification) {
+    hideNotificationEvent({ commit }) {
       commit("SET_NOTIFICATION_EVENT", {});
       commit("SET_SELECTED_NOTIFICATION", {});
       commit("SET_NOTIFICATION_DIALOG", false);
-      return dispatch("removeNotification", notification);
     },
-    acceptNotificationEvent({ getters, rootGetters, dispatch }) {
+    acceptNotificationEvent({ getters, rootGetters }) {
       return MeetingService.acceptMeeting(
         getters.selected_notification.meetingID,
         rootGetters["user/name"]
       ).then(response => {
-        if (response.data) {
-          dispatch("hideNotificationEvent", getters.selected_notification)
-            .then(response => {
-              return response;
-            })
-            .catch(() => {
-              return false;
-            });
-        } else {
-          return false;
-        }
+        return response.data;
       });
     },
-    declineNotificationEvent({ getters, rootGetters, dispatch }) {
+    declineNotificationEvent({ getters, rootGetters }) {
       return MeetingService.declineMeeting(
         getters.selected_notification.meetingID,
         rootGetters["user/name"]
       ).then(response => {
-        if (response.data) {
-          dispatch("hideNotificationEvent", getters.selected_notification)
-            .then(response => {
-              return response;
-            })
-            .catch(() => {
-              return false;
-            });
-        } else {
-          return false;
-        }
+        return response.data;
       });
     }
   }

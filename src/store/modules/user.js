@@ -115,15 +115,18 @@ export default {
         }
       });
     },
-    selectUser({ commit, getters, dispatch }, { name, value }) {
-      let index = getters.users.findIndex(user => user.name === name);
-      if (index >= 0)
-        commit("SET_USER_SELECTED", { key: index, selected: value });
-
-      if (value) {
-        dispatch("meeting/fetchUserEvents", name, { root: true });
-      } else {
-        dispatch("meeting/removeUserEvents", name, { root: true });
+    resetUsers({ commit }) {
+      commit("SET_USERS", []);
+    },
+    selectUser({ commit, getters }, { name, value }) {
+      for (const key in getters.users) {
+        if (getters.users.hasOwnProperty(key)) {
+          const element = getters.users[key];
+          if (element.name === name) {
+            commit("SET_USER_SELECTED", { key: key, selected: value });
+            break;
+          }
+        }
       }
     },
     resetSelectedUsers({ commit, getters }) {

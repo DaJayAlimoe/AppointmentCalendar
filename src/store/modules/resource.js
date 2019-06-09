@@ -6,9 +6,6 @@ export default {
     resources: []
   },
   getters: {
-    events: state => {
-      return state.events;
-    },
     resources: state => {
       return state.resources;
     },
@@ -17,9 +14,6 @@ export default {
     }
   },
   mutations: {
-    SET_EVENTS(state, events) {
-      state.events = events;
-    },
     SET_RESOURCES(state, resources) {
       state.resources = resources;
     },
@@ -54,6 +48,7 @@ export default {
     },
     selectResources({ commit, getters }, resources) {
       resources.forEach(resource => {
+        console.log(resource);
         let index = getters.getResourceIndexByName(resource);
         if (index >= 0)
           commit("SET_RESOURCE_SELECTED", { key: index, selected: true });
@@ -72,6 +67,9 @@ export default {
             commit("SET_RESOURCES", { key: index, selected: false });
         }
       });
+    },
+    resetResources({ commit }) {
+      commit("SET_RESOURCES", []);
     }
   }
 };

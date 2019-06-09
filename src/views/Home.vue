@@ -104,7 +104,6 @@
 </template>
 
 <script>
-import EventBus from "@/event-bus.js";
 import Calendar from "@/components/Calendar.vue";
 import MeetingAssistant from "@/components/MeetingAssistant.vue";
 import { mapState } from "vuex";
@@ -114,17 +113,15 @@ export default {
     Calendar,
     MeetingAssistant
   },
-  computed: mapState(["user", "notification", "meeting", "resource"]),
+  computed: mapState(["user", "notification", "meeting"]),
   mounted() {},
   created: function() {
-    this.$store
-      .dispatch("notification/fetchNotifications", 600000)
-      .catch(error => {
-        this.$emit("notify", {
-          type: "error",
-          text: error.message
-        });
+    this.$store.dispatch("notification/fetchNotifications").catch(error => {
+      this.$emit("notify", {
+        type: "error",
+        text: error.message
       });
+    });
   },
   methods: {
     logout() {
@@ -132,6 +129,9 @@ export default {
         .dispatch("user/logout")
         .then(() => {
           this.$router.replace({ name: "login" });
+          this.$store.dispatch("meeting/resetEvents");
+          this.$store.dispatch("user/resetUsers");
+          this.$store.dispatch("resource/resetResources");
           this.notify({ type: "success", text: "Logout Successful" });
         })
         .catch(error => {
@@ -178,21 +178,42 @@ export default {
         .dispatch(action)
         .then(response => {
           if (response) {
-            this.$refs.calendar.removeCalUser(this.user.name);
-            this.$refs.calendar.addCalUser(
-              this.user.name,
-              this.user.rgba_color
-            );
-            this.$emit("notify", {
-              type: "success",
-              text: successText,
-              timeout: 30000
-            });
+            this.$store
+              .dispatch(
+                "notification/removeNotification",
+                this.notification.selected_notification
+              )
+              .then(() => {
+                this.$store.dispatch("notification/hideNotificationEvent");
+                this.$store.dispatch(
+                  "meeting/removeUserEvents",
+                  this.user.name
+                );
+                this.$store
+                  .dispatch("meeting/fetchUserEvents", this.user.name)
+                  .then(() => {
+                    this.$emit("notify", {
+                      type: "success",
+                      text: successText
+                    });
+                  })
+                  .catch(error => {
+                    this.$emit("notify", {
+                      type: "error",
+                      text: error.message
+                    });
+                  });
+              })
+              .catch(error => {
+                this.$emit("notify", {
+                  type: "error",
+                  text: error.message
+                });
+              });
           } else {
             this.$emit("notify", {
               type: "error",
-              text: errorText,
-              timeout: 30000
+              text: errorText
             });
           }
         })
@@ -204,22 +225,6 @@ export default {
         });
     },
     createMeeting() {
-      if (this.user.users.length < 1) {
-        this.$store.dispatch("user/fetchUsers").catch(error => {
-          this.$emit("notify", {
-            type: "error",
-            text: error.message
-          });
-        });
-      }
-      if (this.resource.resources.length < 1) {
-        this.$store.dispatch("resource/fetchResources").catch(error => {
-          this.$emit("notify", {
-            type: "error",
-            text: error.message
-          });
-        });
-      }
       if (!this.meeting.visible) {
         this.$store.dispatch("meeting/toggleVisibility", true).catch(error => {
           this.$emit("notify", {

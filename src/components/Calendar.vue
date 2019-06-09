@@ -5,11 +5,11 @@
         <v-calendar ref="calendar" v-model="today" type="week" color="primary">
           <!-- the events at the top (all-day) -->
           <template v-slot:dayHeader="{ date }">
-            <template v-for="event in eventsMap[date]">
+            <template v-for="(event, index) in eventsMap[date]">
               <!-- all day events don't have time -->
               <div
                 v-if="!event.time"
-                :key="event.title"
+                :key="index"
                 class="my-event"
                 :style="{ backgroundColor: getuserColor(event.for) }"
                 @click="open(event)"
@@ -19,11 +19,11 @@
           </template>
           <!-- the events at the bottom (timed) -->
           <template v-slot:dayBody="{ date, timeToY, minutesToPixels }">
-            <template v-for="event in eventsMap[date]">
+            <template v-for="(event, index) in eventsMap[date]">
               <!-- timed events -->
               <div
                 v-if="event.time"
-                :key="event.title"
+                :key="index"
                 :style="{
                   top: timeToY(event.time) + 'px',
                   height: minutesToPixels(event.duration) + 'px',
@@ -56,9 +56,7 @@
 </template>
 
 <script>
-import EventBus from "@/event-bus.js";
 import { mapState } from "vuex";
-import MeetingService from "@/services/MeetingService.js";
 export default {
   name: "Calendar",
   data: () => ({
@@ -71,7 +69,7 @@ export default {
   }),
   created() {},
   computed: {
-    ...mapState(["user", "meeting"]),
+    ...mapState(["user", "meeting", "resource"]),
     eventsMap() {
       const map = {};
       for (const key in this.meeting.events) {
@@ -91,12 +89,29 @@ export default {
   methods: {
     open(event) {
       if (event.owner === this.user.name) {
-        this.$store.dispatch("meeting/setMeeting", event);
         this.$store.dispatch("meeting/toggleVisibility", true);
+        this.$store.dispatch("meeting/setMeeting", event);
+        if (typeof event.attendees !== "undefined") {
+          event.attendees.forEach(attendee => {
+            if (attendee.name !== this.user.name) {
+              this.$store.dispatch("user/selectUser", {
+                name: attendee.name,
+                value: true
+              });
+              this.$store.dispatch("meeting/fetchUserEvents", attendee.name);
+            }
+          });
+        }
+        console.log(event.resources);
+        if (typeof event.resources !== "undefined") {
+          console.log(event.resources);
+          this.$store.dispatch("resource/selectResources", event.resources);
+        }
       } else {
         this.$store
           .dispatch("notification/showNotificationEvent", {
-            meetingID: event.id
+            meetingID: event.id,
+            notificationID: null
           })
           .catch(error => {
             this.$emit("notify", {
@@ -107,13 +122,21 @@ export default {
       }
     },
     getuserColor(username) {
-      if (this.user.name === username) return this.user.hex_color;
-      return this.user.users.find(user => {
-        user.name === username;
-      }).hex_color;
-    },
-    trim(str) {
-      return str.replace(/^\s+|\s+$/gm, "");
+      let color = "";
+      if (this.user.name === username) {
+        color = this.user.hex_color;
+      } else {
+        for (const key in this.user.users) {
+          if (this.user.users.hasOwnProperty(key)) {
+            const element = this.user.users[key];
+            if (username === element.name) {
+              color = element.hex_color;
+              break;
+            }
+          }
+        }
+      }
+      return color;
     },
     getEventTitle(event) {
       return event.for === this.user.name ? event.title : "";
