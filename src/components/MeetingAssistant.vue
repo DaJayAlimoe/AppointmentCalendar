@@ -19,7 +19,7 @@
           </v-btn>
           <v-toolbar-title>
             Meeting Assistant
-            <v-avatar size="22px" :color="user.hex_color"></v-avatar>
+            <v-avatar size="22px" :color="user.rgba_color"></v-avatar>
           </v-toolbar-title>
           <v-spacer></v-spacer>
           <v-toolbar-items>
@@ -180,9 +180,9 @@
                     </v-list-tile-action>
 
                     <v-list-tile-content>
-                      <v-list-tile-title>{{
-                        possibleAttendee.name
-                      }}</v-list-tile-title>
+                      <v-list-tile-title>
+                        {{ possibleAttendee.name }}
+                      </v-list-tile-title>
                       <!-- <v-list-tile-sub-title>
                       {{ user.department }}
                       </v-list-tile-sub-title>-->

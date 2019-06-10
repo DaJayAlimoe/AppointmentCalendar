@@ -28,7 +28,7 @@
                   <span>{{ notification.notifications.length }}</span>
                 </template>
                 <span>{{ user.name }}</span>
-                <v-icon :color="user.hex_color" x-large v-on="on"
+                <v-icon :color="user.rgba_color" x-large v-on="on"
                   >account_circle</v-icon
                 >
               </v-badge>
