@@ -124,13 +124,13 @@ export default {
     getuserColor(username) {
       let color = "";
       if (this.user.name === username) {
-        color = this.user.rgba_color;
+        color = this.user.color;
       } else {
         for (const key in this.user.users) {
           if (this.user.users.hasOwnProperty(key)) {
             const element = this.user.users[key];
             if (username === element.name) {
-              color = element.rgba_color;
+              color = element.color;
               break;
             }
           }
