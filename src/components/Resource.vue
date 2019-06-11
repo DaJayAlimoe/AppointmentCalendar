@@ -66,6 +66,8 @@ export default {
   },
   methods: {
     selectResource(resource) {
+      this.events = [];
+      this.show = false;
       if (resource === null) resource = this.selected;
       if (this.meeting.date) {
         this.$store
@@ -81,8 +83,6 @@ export default {
                   resource.name
                 }`
               });
-              this.events = [];
-              this.show = false;
             }
             if (this.previous) {
               this.$store.dispatch(
