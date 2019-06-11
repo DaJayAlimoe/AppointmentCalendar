@@ -180,9 +180,9 @@
                     </v-list-tile-action>
 
                     <v-list-tile-content>
-                      <v-list-tile-title>{{
-                        possibleAttendee.name
-                      }}</v-list-tile-title>
+                      <v-list-tile-title>
+                        {{ possibleAttendee.name }}
+                      </v-list-tile-title>
                       <!-- <v-list-tile-sub-title>
                       {{ user.department }}
                       </v-list-tile-sub-title>-->
@@ -288,6 +288,11 @@ export default {
     setDate(date) {
       this.$refs.menu1.save(date);
       this.$store.dispatch("meeting/setDate", date);
+      for (const key in this.resourceComponents) {
+        if (this.resourceComponents.hasOwnProperty(key)) {
+          this.$refs[`resource-${key}`][0].selectResource(null);
+        }
+      }
     },
     setTime(time) {
       this.$refs.menu2.save(time);

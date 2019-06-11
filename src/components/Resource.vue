@@ -53,7 +53,8 @@ export default {
     return {
       show: false,
       previous: null,
-      selected: { name: "None", category: "None" }
+      selected: { name: "None", category: "None" },
+      events: []
     };
   },
   mounted() {},
@@ -65,6 +66,7 @@ export default {
   },
   methods: {
     selectResource(resource) {
+      if (resource === null) resource = this.selected;
       if (this.meeting.date) {
         this.$store
           .dispatch("resource/fetchResourceEvents", resource.name)
@@ -79,6 +81,7 @@ export default {
                   resource.name
                 }`
               });
+              this.events = [];
               this.show = false;
             }
             if (this.previous) {
@@ -87,7 +90,6 @@ export default {
                 this.previous.name
               );
             }
-            console.log(this.previous);
             this.previous = resource;
           })
           .catch(error => {
