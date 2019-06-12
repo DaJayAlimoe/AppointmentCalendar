@@ -65,7 +65,7 @@ export default {
     }
   },
   methods: {
-    selectResource(resource) {
+    selectResource(resource = null) {
       this.events = [];
       this.show = false;
       if (resource === null) resource = this.selected;

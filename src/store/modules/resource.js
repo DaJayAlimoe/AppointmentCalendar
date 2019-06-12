@@ -11,6 +11,11 @@ export default {
     },
     getResourceIndexByName: state => name => {
       return state.resources.findIndex(resource => resource.name === name);
+    },
+    selectedResources: state => {
+      return state.resources.filter(resource => {
+        return resource.selected;
+      });
     }
   },
   mutations: {

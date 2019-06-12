@@ -109,9 +109,11 @@ export default {
           attendees: rootGetters["user/getSelectedUsers"].map(attendee => {
             return { name: attendee.name, status: 0 };
           }),
-          ressourcen: rootGetters["resource/resources"].map(resource => {
-            return resource.name;
-          })
+          ressourcen: rootGetters["resource/selectedResources"].map(
+            resource => {
+              return resource.name;
+            }
+          )
         };
         return MeetingService.createMeeting(meeting).then(response => {
           if (response.data) {
