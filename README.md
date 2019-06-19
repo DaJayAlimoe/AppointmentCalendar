@@ -1,4 +1,4 @@
-# bob
+# Appointment Calendar
 
 ## Project setup
 ```
