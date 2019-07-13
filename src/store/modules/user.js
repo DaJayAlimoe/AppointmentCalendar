@@ -18,6 +18,9 @@ export default {
     users: []
   },
   getters: {
+    getAuthenticated: state => {
+      return state.authenticated;
+    },
     name: state => {
       return state.name;
     },
@@ -54,17 +57,38 @@ export default {
   },
   actions: {
     login({ commit, getters, dispatch }, password) {
-      return UserService.login(getters.name, password).then(response => {
+      UserService.login(getters.name, password).then(response => {
         if (response.data) {
-          let rgba = getRandomRGBA();
           commit("LOGIN", {
             auth: response.data,
             name: getters.name,
-            color: rgba
+            color: getRandomRGBA()
           });
+          dispatch(
+            "alert/add",
+            {
+              type: "success",
+              message: "Login Successful"
+            },
+            { root: true }
+          );
+          if (!getters.users.length) {
+            dispatch("fetchUsers");
+          }
+
+          dispatch("resource/fetchResources", null, { root: true });
+
           dispatch("meeting/fetchUserEvents", getters.name, { root: true });
+        } else {
+          dispatch(
+            "alert/add",
+            {
+              type: "error",
+              message: "Invalid Credentials try again!"
+            },
+            { root: true }
+          );
         }
-        return response.data;
       });
     },
     logout({ commit }) {

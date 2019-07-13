@@ -45,49 +45,11 @@ export default {
   methods: {
     onSubmit() {
       if (this.user.name && this.password) {
-        this.$store
-          .dispatch("user/login", this.password)
-          .then(response => {
-            if (response) {
-              this.password = null;
-              this.$emit("notify", {
-                type: "success",
-                text: "Login Successful"
-              });
-              this.$router.replace({ name: "home" });
-              if (!this.user.users.length) {
-                this.$store.dispatch("user/fetchUsers").catch(error => {
-                  this.$emit("notify", {
-                    type: "error",
-                    text: error.message
-                  });
-                });
-              }
-              if (!this.resource.resources.length) {
-                this.$store.dispatch("resource/fetchResources").catch(error => {
-                  this.$emit("notify", {
-                    type: "error",
-                    text: error.message
-                  });
-                });
-              }
-            } else {
-              this.$emit("notify", {
-                type: "error",
-                text: "Invalid Credentials try again!"
-              });
-            }
-          })
-          .catch(error => {
-            this.$emit("notify", {
-              type: "error",
-              text: error.message
-            });
-          });
+        this.$store.dispatch("user/login", this.password);
       } else {
-        this.$emit("notify", {
+        this.$store.dispatch("alert/add", {
           type: "error",
-          text: "Username and Password Required"
+          message: "Username and Password Required"
         });
       }
     }

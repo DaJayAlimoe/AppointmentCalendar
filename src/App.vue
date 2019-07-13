@@ -3,41 +3,32 @@
     <v-app id="inspire">
       <v-content>
         <router-view @notify="notify" />
-        <v-snackbar
-          v-model="snackbar.state"
-          :color="snackbar.type"
-          :top="true"
-          :middle="true"
-          :timeout="snackbar.timeout"
-        >
-          {{ snackbar.text }}
-          <v-btn dark flat @click.prevent="snackbar.state = false">Close</v-btn>
-        </v-snackbar>
+        <Alert v-for="alert in alert.alerts" :key="alert.id" :alert="alert" />
       </v-content>
     </v-app>
   </div>
 </template>
 
 <script>
+import Alert from "@/components/Alert.vue";
 import { mapState } from "vuex";
+
 export default {
   name: "App",
-  data() {
-    return {
-      snackbar: {
-        state: false,
-        type: "info",
-        timeout: 2000,
-        text: ""
-      }
-    };
-  },
+  components: { Alert },
   computed: {
-    ...mapState(["user"])
+    ...mapState(["user", "alert"]),
+    authenticated: function() {
+      return this.user.authenticated;
+    }
   },
-  mounted() {
-    if (!this.user.authenticated) {
-      this.$router.replace({ name: "login" });
+  watch: {
+    authenticated: function(newValue) {
+      if (newValue) {
+        this.$router.replace({ name: "home" });
+      } else {
+        this.$router.replace({ name: "login" });
+      }
     }
   },
   methods: {
