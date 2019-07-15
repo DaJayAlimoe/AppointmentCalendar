@@ -67,17 +67,17 @@
           <v-card v-if="notification.event !== null">
             <v-card-title class="headline">Meeting Details</v-card-title>
 
-            <v-card-text>
-              {{ "Title: " + notification.event.title }}
-            </v-card-text>
+            <v-card-text>{{
+              "Title: " + notification.event.title
+            }}</v-card-text>
             <v-card-text>{{ "Date: " + notification.event.date }}</v-card-text>
             <v-card-text>{{ "Time: " + notification.event.time }}</v-card-text>
-            <v-card-text>
-              {{ "Duration: " + notification.event.duration + " minutes" }}
-            </v-card-text>
-            <v-card-text>
-              {{ "From : " + notification.event.owner }}
-            </v-card-text>
+            <v-card-text>{{
+              "Duration: " + notification.event.duration + " minutes"
+            }}</v-card-text>
+            <v-card-text>{{
+              "From : " + notification.event.owner
+            }}</v-card-text>
 
             <v-card-actions>
               <v-spacer></v-spacer>

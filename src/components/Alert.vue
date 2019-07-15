@@ -6,7 +6,7 @@
     :middle="true"
     :timeout="alert.timeout"
   >
-    {{ snackbar.message }}
+    {{ alert.message }}
     <v-btn dark flat @click.prevent="clearAlert()">Close</v-btn>
   </v-snackbar>
 </template>
@@ -22,7 +22,6 @@ export default {
     }
   },
   created() {
-    console.log("created");
     this.state = true;
   },
   mounted() {
@@ -35,7 +34,7 @@ export default {
     clearTimeout(this.timer);
   },
   data() {
-    return { state: false, timeout: 2000, timer: null };
+    return { state: false, timeout: 3000, timer: null };
   },
   methods: {
     ...mapActions("alert", ["remove"]),

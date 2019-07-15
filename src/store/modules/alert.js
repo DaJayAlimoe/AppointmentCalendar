@@ -3,11 +3,11 @@ let nextId = 1;
 export default {
   namespaced: true,
   state: {
-    arlets: []
+    alerts: []
   },
   mutations: {
     PUSH(state, alert) {
-      state.arlets.push({ id: nextId++, ...alert });
+      state.alerts.push({ id: nextId++, ...alert });
     },
     DELETE(state, alertToRemove) {
       state.alerts = state.alerts.filter(

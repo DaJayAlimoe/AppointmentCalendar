@@ -147,10 +147,10 @@ export default {
           if (response.data) {
             dispatch("removeNotification", getters.selected_notification);
             dispatch("hideNotificationEvent");
-            dispatch("meeting/removeUserEvents", rootGetters.user.name, {
+            dispatch("meeting/removeUserEvents", rootGetters["user/name"], {
               root: true
             });
-            dispatch("meeting/fetchUserEvents", rootGetters.user.name, {
+            dispatch("meeting/fetchUserEvents", rootGetters["user/name"], {
               root: true
             });
             dispatch(

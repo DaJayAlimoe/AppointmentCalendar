@@ -92,10 +92,10 @@ export default {
             if (response.data) {
               commit("SET_VISIBLE", false);
               dispatch("resetMeeting");
-              dispatch("meeting/removeUserEvents", rootGetters.user.name, {
+              dispatch("meeting/removeUserEvents", rootGetters["user/name"], {
                 root: true
               });
-              dispatch("meeting/fetchUserEvents", rootGetters.user.name, {
+              dispatch("meeting/fetchUserEvents", rootGetters["user/name"], {
                 root: true
               });
               dispatch(
