@@ -156,11 +156,7 @@
             <v-layout row wrap>
               <v-flex xs10 left>
                 <v-card>
-                  <Calendar
-                    :user="user"
-                    ref="sharedCalendar"
-                    @notify="notify"
-                  />
+                  <Calendar :user="user" ref="sharedCalendar" />
                 </v-card>
               </v-flex>
               <v-flex xs2>
@@ -217,7 +213,6 @@
                   :is="resourceComponent"
                   :key="index"
                   :ref="'resource-' + index"
-                  @notify="notify"
                 ></component>
               </template>
             </v-layout>
@@ -264,11 +259,21 @@ export default {
       }
     );
   },
-  computed: mapState(["user", "meeting", "resource"]),
+  computed: {
+    ...mapState(["user", "meeting", "resource"]),
+    selectedResources: function() {
+      return !this.resource.resources.filter(resource => resource.selected)
+        .length;
+    }
+  },
+  watch: {
+    selectedResources: function(newValue) {
+      if (newValue) {
+        this.resourceComponents = [];
+      }
+    }
+  },
   methods: {
-    notify(notification) {
-      this.$emit("notify", notification);
-    },
     addResourceComponent() {
       this.resourceComponents.push(Resource);
     },
@@ -277,9 +282,6 @@ export default {
         let index = this.resourceComponents.length - 1;
         this.$refs[`resource-${index}`][0].destroy();
         this.resourceComponents.splice(index, 1);
-        if (!this.resourceComponents.length) {
-          this.resourceComponents = [];
-        }
       }
     },
     setTitle(title) {
@@ -306,11 +308,6 @@ export default {
         name: user.name,
         value: user.selected
       });
-      if (user.selected) {
-        this.$store.dispatch("meeting/fetchUserEvents", user.name);
-      } else {
-        this.$store.dispatch("meeting/removeUserEvents", user.name);
-      }
     },
     reset() {
       this.$store.dispatch("meeting/resetMeeting");
@@ -318,54 +315,10 @@ export default {
       this.$store.dispatch("meeting/toggleVisibility", false);
     },
     deleteEvent(id) {
-      this.$store
-        .dispatch("meeting/deleteMeeting", id)
-        .then(response => {
-          if (response) {
-            this.$store.dispatch("meeting/removeUserEvents", this.user.name);
-            this.$store.dispatch("meeting/fetchUserEvents", this.user.name);
-            this.$emit("notify", {
-              type: "success",
-              text: "Meeting successfully Deleted!"
-            });
-          }
-        })
-        .catch(error => {
-          this.$emit("notify", {
-            type: "error",
-            text: error.message
-          });
-        });
+      this.$store.dispatch("meeting/deleteMeeting", id);
     },
     save() {
-      this.$store
-        .dispatch("meeting/saveMeeting")
-        .then(response => {
-          if (response) {
-            this.$emit("notify", {
-              type: "success",
-              text: "Meeting succesfully saved!"
-            });
-            this.$store.dispatch("meeting/resetMeeting");
-            this.$store.dispatch("user/resetSelectedUsers");
-            while (this.resourceComponents.length) {
-              this.removeResourceComponent();
-            }
-            this.$store.dispatch("meeting/removeUserEvents", this.user.name);
-            this.$store.dispatch("meeting/fetchUserEvents", this.user.name);
-          } else {
-            this.$emit("notify", {
-              type: "error",
-              text: "Could not save Meeting. Try again!"
-            });
-          }
-        })
-        .catch(error => {
-          this.$emit("notify", {
-            type: "error",
-            text: error.message
-          });
-        });
+      this.$store.dispatch("meeting/saveMeeting");
     }
   }
 };

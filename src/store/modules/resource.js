@@ -13,9 +13,7 @@ export default {
       return state.resources.findIndex(resource => resource.name === name);
     },
     selectedResources: state => {
-      return state.resources.filter(resource => {
-        return resource.selected;
-      });
+      return state.resources.filter(resource => resource.selected);
     }
   },
   mutations: {
@@ -65,11 +63,9 @@ export default {
         commit("SET_RESOURCE_SELECTED", { key: index, selected: false });
     },
     resetSelectedResources({ commit, getters }) {
-      getters.resources.forEach(resource => {
+      getters.resources.forEach((resource, index) => {
         if (resource.selected) {
-          let index = getters.getResourceIndexByName(resource.name);
-          if (index >= 0)
-            commit("SET_RESOURCES", { key: index, selected: false });
+          commit("SET_RESOURCES", { key: index, selected: false });
         }
       });
     },

@@ -64,6 +64,9 @@ export default {
             name: getters.name,
             color: getRandomRGBA()
           });
+          dispatch("meeting/fetchUserEvents", getters.name, { root: true });
+          dispatch("fetchUsers");
+          dispatch("resource/fetchResources", null, { root: true });
           dispatch(
             "alert/add",
             {
@@ -72,13 +75,6 @@ export default {
             },
             { root: true }
           );
-          if (!getters.users.length) {
-            dispatch("fetchUsers");
-          }
-
-          dispatch("resource/fetchResources", null, { root: true });
-
-          dispatch("meeting/fetchUserEvents", getters.name, { root: true });
         } else {
           dispatch(
             "alert/add",
@@ -91,44 +87,73 @@ export default {
         }
       });
     },
-    logout({ commit }) {
+    logout({ commit, dispatch }) {
       commit("LOGOUT");
+      dispatch("meeting/resetEvents", null, { root: true });
+      dispatch("resetUsers");
+      dispatch("resource/resetResources", null, { root: true });
+      dispatch(
+        "alert/add",
+        {
+          type: "success",
+          message: "Logout Successful"
+        },
+        { root: true }
+      );
     },
-    fetchUsers({ commit, getters }) {
-      return UserService.getUsers(getters.name).then(response => {
-        if (response.data) {
-          let users = [];
-          let index = 0;
-          response.data.forEach(user => {
-            let rgba = getRandomRGBA();
-            users[index] = {
-              ...{ name: user },
-              ...{ color: rgba, selected: false }
-            };
-            index++;
-          });
-          commit("SET_USERS", users);
-        }
-      });
+    fetchUsers({ commit, getters, dispatch }) {
+      UserService.getUsers(getters.name)
+        .then(response => {
+          if (response.data) {
+            let users = response.data.map(user => {
+              return {
+                ...{ name: user },
+                ...{ color: getRandomRGBA(), selected: false }
+              };
+            });
+            commit("SET_USERS", users);
+          }
+        })
+        .catch(error => {
+          dispatch(
+            "alert/add",
+            {
+              type: "error",
+              message: error.message
+            },
+            { root: true }
+          );
+        });
     },
     resetUsers({ commit }) {
       commit("SET_USERS", []);
     },
-    selectUser({ commit, getters }, { name, value }) {
-      for (const key in getters.users) {
-        if (getters.users.hasOwnProperty(key)) {
-          const element = getters.users[key];
-          if (element.name === name) {
-            commit("SET_USER_SELECTED", { key: key, selected: value });
-            break;
-          }
-        }
+    selectUser({ commit, getters, dispatch }, { name, value }) {
+      let key = getters.users.findIndex(user => {
+        return user.name === name;
+      });
+      commit("SET_USER_SELECTED", { key: key, selected: value });
+      if (value) {
+        dispatch("meeting/fetchUserEvents", name, { root: true });
+      } else {
+        dispatch("meeting/removeUserEvents", name, { root: true });
       }
+      // for (const key in getters.users) {
+      //   if (getters.users.hasOwnProperty(key)) {
+      //     const element = getters.users[key];
+      //     if (element.name === name) {
+      //       commit("SET_USER_SELECTED", { key: key, selected: value });
+      //       break;
+      //     }
+      //   }
+      // }
     },
-    resetSelectedUsers({ commit, getters }) {
-      getters.users.forEach((user, index) => {
-        if (user.selected === true)
-          commit("SET_USER_SELECTED", { key: index, selected: false });
+    resetSelectedUsers({ getters, dispatch }) {
+      let selectedUsers = getters.users.filter(user => user.selected);
+      selectedUsers.forEach(user => {
+        if (user.selected === true) {
+          dispatch("selectUser", { name: user.name, value: user.selected });
+        }
       });
     }
   }

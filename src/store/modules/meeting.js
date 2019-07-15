@@ -1,5 +1,4 @@
 import MeetingService from "@/services/MeetingService.js";
-import { Promise } from "q";
 export default {
   namespaced: true,
   state: {
@@ -86,18 +85,46 @@ export default {
       commit("SET_TIME", meeting.time);
       commit("SET_DURATION", meeting.duration / 60);
     },
-    deleteMeeting({ commit, getters, dispatch }, id) {
+    deleteMeeting({ commit, getters, dispatch, rootGetters }, id) {
       if (getters.id === id) {
-        return MeetingService.deleteMeeting(id).then(response => {
-          if (response.data) {
-            commit("SET_VISIBLE", false);
-            dispatch("resetMeeting");
-          }
-          return response.data;
-        });
+        MeetingService.deleteMeeting(id)
+          .then(response => {
+            if (response.data) {
+              commit("SET_VISIBLE", false);
+              dispatch("resetMeeting");
+              dispatch("meeting/removeUserEvents", rootGetters.user.name, {
+                root: true
+              });
+              dispatch("meeting/fetchUserEvents", rootGetters.user.name, {
+                root: true
+              });
+              dispatch(
+                "alert/add",
+                {
+                  type: "success",
+                  message: "Meeting successfully Deleted!"
+                },
+                {
+                  root: true
+                }
+              );
+            }
+          })
+          .catch(error => {
+            dispatch(
+              "alert/add",
+              {
+                type: "error",
+                message: error.message
+              },
+              {
+                root: true
+              }
+            );
+          });
       }
     },
-    saveMeeting({ commit, getters, rootGetters }) {
+    saveMeeting({ commit, getters, dispatch, rootGetters }) {
       if (getters.title && getters.date && getters.time && getters.duration) {
         let meeting = {
           id: getters.id,
@@ -115,28 +142,72 @@ export default {
             }
           )
         };
-        return MeetingService.createMeeting(meeting).then(response => {
-          if (response.data) {
-            commit("SET_VISIBLE", false);
-          }
-          return response.data;
-        });
+        MeetingService.createMeeting(meeting)
+          .then(response => {
+            if (response.data) {
+              commit("SET_VISIBLE", false);
+              dispatch(
+                "alert/add",
+                {
+                  type: "success",
+                  message: "Meeting successfully saved!"
+                },
+                {
+                  root: true
+                }
+              );
+              dispatch("resetMeeting");
+              dispatch("user/resetSelectedUsers", null, { root: true });
+              dispatch("removeUserEvents", this.user.name);
+              dispatch("fetchUserEvents", this.user.name);
+            } else {
+              dispatch(
+                "alert/add",
+                {
+                  type: "error",
+                  message: "Could not save Meeting. Try again!"
+                },
+                {
+                  root: true
+                }
+              );
+            }
+          })
+          .catch(error => {
+            dispatch(
+              "alert/add",
+              {
+                type: "error",
+                message: error.message
+              },
+              {
+                root: true
+              }
+            );
+          });
       } else {
-        return new Promise(function(resolve) {
-          resolve(false);
-        });
+        dispatch(
+          "alert/add",
+          {
+            type: "error",
+            message: "The title date, time and duration cannot be empty!"
+          },
+          {
+            root: true
+          }
+        );
       }
     },
-    resetMeeting({ commit, rootGetters, dispatch }) {
+    resetMeeting({ commit /**rootGetters, dispatch */ }) {
       commit("SET_ID", 0);
       commit("SET_OWNER", "");
       commit("SET_TITLE", "");
       commit("SET_DATE", "");
       commit("SET_TIME", "");
       commit("SET_DURATION", "");
-      rootGetters["user/users"].forEach(user => {
-        dispatch("removeUserEvents", user.name);
-      });
+      // rootGetters["user/users"].forEach(user => {
+      //   dispatch("removeUserEvents", user.name);
+      // });
     },
     toggleVisibility({ commit }, visible) {
       commit("SET_VISIBLE", visible);
@@ -153,33 +224,45 @@ export default {
     setDuration({ commit }, duration) {
       commit("SET_DURATION", duration);
     },
-    fetchUserEvents({ commit, getters }, username) {
-      return MeetingService.getUserEvents(username).then(response => {
-        let newEvents = getters.events;
-        if (response.data) {
-          for (const key in response.data) {
-            if (response.data.hasOwnProperty(key)) {
-              let eventData = {
-                ...response.data[key],
+    fetchUserEvents({ commit, getters, dispatch }, username) {
+      MeetingService.getUserEvents(username)
+        .then(response => {
+          let newEvents = getters.events;
+          if (response.data) {
+            let mappedEvents = response.data.map(event => {
+              return {
+                ...event,
                 ...{ for: username }
               };
-              newEvents.push(eventData);
-            }
+            });
+            newEvents.push(mappedEvents);
+            // for (const key in response.data) {
+            //   if (response.data.hasOwnProperty(key)) {
+            //     let eventData = {
+            //       ...response.data[key],
+            //       ...{ for: username }
+            //     };
+            //     newEvents.push(eventData);
+            //   }
+            // }
+            commit("SET_EVENTS", newEvents);
           }
-          commit("SET_EVENTS", newEvents);
-        }
-        return response.data;
-      });
+        })
+        .catch(error => {
+          dispatch(
+            "alert/add",
+            {
+              type: "error",
+              message: error.message
+            },
+            {
+              root: true
+            }
+          );
+        });
     },
     removeUserEvents({ commit, getters }, username) {
-      let newEvents = [];
-      for (const key in getters.events) {
-        if (getters.events.hasOwnProperty(key)) {
-          if (getters.events[key]["for"] !== username) {
-            newEvents.push(getters.events[key]);
-          }
-        }
-      }
+      let newEvents = getters.events.filter(event => event.for !== username);
       commit("SET_EVENTS", newEvents);
     },
     resetEvents({ commit }) {

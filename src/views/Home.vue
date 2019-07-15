@@ -10,7 +10,7 @@
             @click.stop="createMeeting()"
             >Create</v-btn
           >
-          <MeetingAssistant @notify="notify" />
+          <MeetingAssistant />
         </v-flex>
         <v-spacer></v-spacer>
         <v-flex sm4 xs12 class="text-sm-right text-xs-center">
@@ -60,7 +60,7 @@
       <v-spacer></v-spacer>
       <v-layout align-center justify-space-around row>
         <v-flex xs12>
-          <Calendar ref="calendar" :user="user" @notify="notify" />
+          <Calendar ref="calendar" :user="user" />
         </v-flex>
 
         <v-dialog v-model="notification.dialog" max-width="290">
@@ -114,133 +114,32 @@ export default {
     MeetingAssistant
   },
   computed: mapState(["user", "notification", "meeting"]),
-  mounted() {},
-  created: function() {
-    this.$store.dispatch("notification/fetchNotifications").catch(error => {
-      this.$emit("notify", {
-        type: "error",
-        text: error.message
-      });
-    });
-  },
   methods: {
     logout() {
-      this.$store
-        .dispatch("user/logout")
-        .then(() => {
-          this.$router.replace({ name: "login" });
-          this.$store.dispatch("meeting/resetEvents");
-          this.$store.dispatch("user/resetUsers");
-          this.$store.dispatch("resource/resetResources");
-          this.notify({ type: "success", text: "Logout Successful" });
-        })
-        .catch(error => {
-          this.$emit("notify", {
-            type: "error",
-            text: error.message
-          });
-        });
-    },
-    notify(notification) {
-      this.$emit("notify", notification);
+      this.$store.dispatch("user/logout");
     },
     showNotificationDetails(notification) {
       if ([1, 2, 4].includes(notification.notificationType)) {
-        this.$store
-          .dispatch("notification/removeNotification", notification)
-          .catch(error => {
-            this.$emit("notify", {
-              type: "error",
-              text: error.message
-            });
-          });
+        this.$store.dispatch("notification/removeNotification", notification);
       } else {
-        this.$store
-          .dispatch("notification/showNotificationEvent", notification)
-          .catch(error => {
-            this.$emit("notify", {
-              type: "error",
-              text: error.message
-            });
-          });
+        this.$store.dispatch(
+          "notification/showNotificationEvent",
+          notification
+        );
       }
     },
     closenotificationDialog(agreed) {
-      let action = "notification/declineNotificationEvent";
-      let successText = "Meeting declined!";
-      let errorText = "Meeting couldn't be declined! Try again";
       if (agreed) {
-        action = "notification/acceptNotificationEvent";
-        successText = "Meeting accepted!";
-        errorText = "Meeting couldn't be saved!";
+        this.$store.dispatch("notification/acceptNotificationEvent");
+      } else {
+        this.$store.dispatch("notification/declineNotificationEvent");
       }
-      this.$store
-        .dispatch(action)
-        .then(response => {
-          if (response) {
-            this.$store
-              .dispatch(
-                "notification/removeNotification",
-                this.notification.selected_notification
-              )
-              .then(() => {
-                this.$store.dispatch("notification/hideNotificationEvent");
-                this.$store.dispatch(
-                  "meeting/removeUserEvents",
-                  this.user.name
-                );
-                this.$store
-                  .dispatch("meeting/fetchUserEvents", this.user.name)
-                  .then(() => {
-                    this.$emit("notify", {
-                      type: "success",
-                      text: successText
-                    });
-                  })
-                  .catch(error => {
-                    this.$emit("notify", {
-                      type: "error",
-                      text: error.message
-                    });
-                  });
-              })
-              .catch(error => {
-                this.$emit("notify", {
-                  type: "error",
-                  text: error.message
-                });
-              });
-          } else {
-            this.$emit("notify", {
-              type: "error",
-              text: errorText
-            });
-          }
-        })
-        .catch(error => {
-          this.$emit("notify", {
-            type: "error",
-            text: error.message
-          });
-        });
     },
     createMeeting() {
       if (!this.meeting.visible) {
-        this.$store.dispatch("meeting/toggleVisibility", true).catch(error => {
-          this.$emit("notify", {
-            type: "error",
-            text: error.message
-          });
-        });
+        this.$store.dispatch("meeting/toggleVisibility", true);
       }
-    },
-    deletedEvent() {
-      this.$refs.calendar.removeCalUser(this.user.name);
-      this.$refs.calendar.addCalUser(this.user.name, this.user.color);
     }
-  },
-  beforeDestroy() {
-    clearInterval(this.timer);
   }
 };
 </script>

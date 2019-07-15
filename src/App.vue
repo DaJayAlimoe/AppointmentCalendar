@@ -2,7 +2,7 @@
   <div id="app">
     <v-app id="inspire">
       <v-content>
-        <router-view @notify="notify" />
+        <router-view />
         <Alert v-for="alert in alert.alerts" :key="alert.id" :alert="alert" />
       </v-content>
     </v-app>
@@ -12,10 +12,16 @@
 <script>
 import Alert from "@/components/Alert.vue";
 import { mapState } from "vuex";
+import { setTimeout, clearTimeout } from "timers";
 
 export default {
   name: "App",
   components: { Alert },
+  data() {
+    return {
+      notificationTimer: null
+    };
+  },
   computed: {
     ...mapState(["user", "alert"]),
     authenticated: function() {
@@ -26,24 +32,25 @@ export default {
     authenticated: function(newValue) {
       if (newValue) {
         this.$router.replace({ name: "home" });
+        this.fetchNotifications();
       } else {
         this.$router.replace({ name: "login" });
+        this.clearNotificationTimer();
       }
     }
   },
   methods: {
-    notify(snackbar) {
-      this.snackbar.type = snackbar.type ? snackbar.type : this.snackbar.type;
-      if (this.snackbar.type === "info" && snackbar.timeout === undefined) {
-        this.snackbar.timeout = 2000;
-      } else {
-        this.snackbar.timeout = snackbar.timeout
-          ? snackbar.timeout
-          : this.snackbar.timeout;
-      }
-      this.snackbar.text = snackbar.text ? snackbar.text : this.snackbar.text;
-      this.snackbar.state = true;
+    fetchNotifications() {
+      this.$store.dispatch("notification/fetchNotifications");
+      this.clearNotificationTimer();
+      this.notificationTimer = setTimeout(this.fetchNotifications, 30000);
+    },
+    clearNotificationTimer() {
+      if (this.notificationTimer !== null) clearTimeout(this.notificationTimer);
     }
+  },
+  beforeDestroy() {
+    this.clearNotificationTimer();
   }
 };
 </script>
